@@ -26,12 +26,10 @@
 #include <node.h>
 #include <string.h>
 
-#include <libimobiledevice/libimobiledevice.h>
-#include <libimobiledevice/lockdown.h>
-// #include "common/utils.h"
-
 extern "C" {
-    #include "common/utils.h"
+  #include <libimobiledevice/libimobiledevice.h>
+  #include <libimobiledevice/lockdown.h>
+  #include "common/utils.h"
 }
 
 using v8::Handle;

@@ -3,8 +3,7 @@
         {
             "target_name": "libimobiledevice",
             "sources": [
-                "src/libimobiledevice_wrap.cc",
-                "tmp/libimobiledevice/tools/ideviceinfo.c"
+                "src/libimobiledevice_wrap.cc"
             ],
             "include_dirs": [
                 "dependencies/include",
