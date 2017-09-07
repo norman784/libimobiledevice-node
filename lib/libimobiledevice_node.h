@@ -16,11 +16,11 @@ using namespace std;
 typedef function<void(string error, string output)> node_callback;
 
 struct idevice_info_options {
-    bool debug;
-    bool simple;
-    char *udid;
-    char *domain;
-    char *key;
+    bool debug = false;
+    bool simple = false;
+    char *udid = NULL;
+    char *domain = NULL;
+    char *key = NULL;
 };
 
 void idevice_info(idevice_info_options options, node_callback callback);

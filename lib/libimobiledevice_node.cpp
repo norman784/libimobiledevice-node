@@ -10,7 +10,10 @@
 
 #include <libimobiledevice/libimobiledevice.h>
 #include <libimobiledevice/lockdown.h>
-#include "common/utils.h"
+
+extern "C" {
+    #include "common/utils.h"
+}
 
 static const char *domains[] = {
     "com.apple.disk_usage",

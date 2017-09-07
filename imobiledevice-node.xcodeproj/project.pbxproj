@@ -7,21 +7,21 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1915A4181F6178ED007B8036 /* libimobiledevice.6.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1915A4161F6178ED007B8036 /* libimobiledevice.6.dylib */; };
-		1915A4191F6178ED007B8036 /* libplist.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1915A4171F6178ED007B8036 /* libplist.3.dylib */; };
 		1915A41C1F61793B007B8036 /* libimobiledevice_node.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1915A41B1F61793B007B8036 /* libimobiledevice_node.cpp */; };
 		1915A4231F618334007B8036 /* utils.c in Sources */ = {isa = PBXBuildFile; fileRef = 1915A4211F618334007B8036 /* utils.c */; };
 		1915A4241F618334007B8036 /* utils.h in Headers */ = {isa = PBXBuildFile; fileRef = 1915A4221F618334007B8036 /* utils.h */; };
+		1939C67B1F61D8C00032A5F7 /* libimobiledevice.6.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1939C6791F61D8C00032A5F7 /* libimobiledevice.6.dylib */; };
+		1939C67C1F61D8C00032A5F7 /* libplist.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1939C67A1F61D8C00032A5F7 /* libplist.3.dylib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		1915A3FA1F61789C007B8036 /* libimobiledevice-node.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = "libimobiledevice-node.dylib"; sourceTree = BUILT_PRODUCTS_DIR; };
-		1915A4161F6178ED007B8036 /* libimobiledevice.6.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libimobiledevice.6.dylib; path = dependencies/lib/libimobiledevice.6.dylib; sourceTree = "<group>"; };
-		1915A4171F6178ED007B8036 /* libplist.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libplist.3.dylib; path = dependencies/lib/libplist.3.dylib; sourceTree = "<group>"; };
 		1915A41A1F617928007B8036 /* libimobiledevice_node.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = libimobiledevice_node.h; sourceTree = "<group>"; };
 		1915A41B1F61793B007B8036 /* libimobiledevice_node.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = libimobiledevice_node.cpp; sourceTree = "<group>"; };
 		1915A4211F618334007B8036 /* utils.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = utils.c; sourceTree = "<group>"; };
 		1915A4221F618334007B8036 /* utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = utils.h; sourceTree = "<group>"; };
+		1939C6791F61D8C00032A5F7 /* libimobiledevice.6.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libimobiledevice.6.dylib; path = dependencies/lib/libimobiledevice.6.dylib; sourceTree = "<group>"; };
+		1939C67A1F61D8C00032A5F7 /* libplist.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libplist.3.dylib; path = dependencies/lib/libplist.3.dylib; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -29,8 +29,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1915A4181F6178ED007B8036 /* libimobiledevice.6.dylib in Frameworks */,
-				1915A4191F6178ED007B8036 /* libplist.3.dylib in Frameworks */,
+				1939C67B1F61D8C00032A5F7 /* libimobiledevice.6.dylib in Frameworks */,
+				1939C67C1F61D8C00032A5F7 /* libplist.3.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -67,8 +67,8 @@
 		1915A4151F6178ED007B8036 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				1915A4161F6178ED007B8036 /* libimobiledevice.6.dylib */,
-				1915A4171F6178ED007B8036 /* libplist.3.dylib */,
+				1939C6791F61D8C00032A5F7 /* libimobiledevice.6.dylib */,
+				1939C67A1F61D8C00032A5F7 /* libplist.3.dylib */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
