@@ -2,12 +2,16 @@
   "name": "libimobiledevice-node",
   "version": "1.2.1",
   "description": "A cross-platform software protocol library and tools to communicate with iOS® devices natively.",
-  "main": "index.js",
+  "main": "lib/libimobiledevice.js",
   "repository": "https://github.com/norman784/libimobiledevice-node",
   "author": "Norman Paniagua (https://github.com/norman784)",
   "license": "GPL-2.0",
   "dependencies": {
-    "node-gyp": "^3.6.2"
+    "ffi": "^2.2.0",
+    "node-gyp": "^3.6.2",
+    "ref": "^1.3.5",
+    "ref-array": "^1.2.0",
+    "ref-struct": "^1.1.0"
   },
   "config": {
     "openssl_url": "https://www.openssl.org/source/openssl-1.0.2l.tar.gz",
@@ -27,7 +31,7 @@
     "clone:libplist": "cd tmp && git clone $npm_package_config_libplist_url",
     "clone:libusbmuxd": "cd tmp && git clone $npm_package_config_libusbmuxd_url",
     "clone:libimobiledevice": "cd tmp && git clone $npm_package_config_libimobiledevice_url",
-    "make": "yarn clean:dependencies && mkdir $npm_package_config_install_dir && yarn make:openssl && yarn make:libplist && yarn make:libusbmuxd && yarn make:libimobiledevice",
+    "make": "yarn clean:dependencies && mkdir $npm_package_config_install_dir && yarn make:openssl && yarn make:libplist && yarn make:libusbmuxd && yarn make:libimobiledevice && yarn clean:tmp",
     "make:openssl": "export INSTALL_PATH=$PWD/$npm_package_config_install_dir && cd tmp/$npm_package_config_openssl_dir && ./Configure --prefix=$INSTALL_PATH --openssldir=$INSTALL_PATH/openssl darwin64-x86_64-cc && make && make install_sw",
     "make:libplist": "export npm_package_config_library_dir=$npm_package_config_libplist_dir && yarn make:generic",
     "make:libusbmuxd": "export npm_package_config_library_dir=$npm_package_config_libusbmuxd_dir && yarn make:generic",
@@ -35,8 +39,7 @@
     "make:generic": "export INSTALL_PATH=$PWD/$npm_package_config_install_dir && cd tmp/$npm_package_config_library_dir && ./autogen.sh && ./configure --prefix=$INSTALL_PATH && make && make install",
     "clean:tmp": "rm -rf tmp",
     "clean:dependencies": "rm -rf $npm_package_config_install_dir",
-    "preinstall": "yarn clone && yarn make",
-    "compile": "node-gyp configure build",
+    "__preinstall": "yarn clone && yarn make",
     "start": "node index.js",
     "test": "cd test && node index.js"
   }
