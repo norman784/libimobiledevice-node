@@ -5,6 +5,6 @@
       location = "group:test/test.xcodeproj">
    </FileRef>
    <FileRef
-      location = "group:libimobiledevice-node.xcodeproj">
+      location = "group:/Users/normanpaniagua/Projects/norman784/libimobiledevice-node/imobiledevice-node.xcodeproj">
    </FileRef>
 </Workspace>

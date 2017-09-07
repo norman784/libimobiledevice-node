@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		1915A40F1F6178DB007B8036 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1915A40E1F6178DB007B8036 /* main.cpp */; };
+		195A1BB71F61D1A0000C14A4 /* libimobiledevice-node.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 195A1BB61F61D1A0000C14A4 /* libimobiledevice-node.dylib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -25,6 +26,7 @@
 /* Begin PBXFileReference section */
 		1915A40B1F6178DB007B8036 /* test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = test; sourceTree = BUILT_PRODUCTS_DIR; };
 		1915A40E1F6178DB007B8036 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		195A1BB61F61D1A0000C14A4 /* libimobiledevice-node.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libimobiledevice-node.dylib"; path = "../build/Debug/libimobiledevice-node.dylib"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -32,6 +34,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				195A1BB71F61D1A0000C14A4 /* libimobiledevice-node.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -43,6 +46,7 @@
 			children = (
 				1915A40D1F6178DB007B8036 /* test */,
 				1915A40C1F6178DB007B8036 /* Products */,
+				1915A41D1F618045007B8036 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -60,6 +64,14 @@
 				1915A40E1F6178DB007B8036 /* main.cpp */,
 			);
 			path = test;
+			sourceTree = "<group>";
+		};
+		1915A41D1F618045007B8036 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				195A1BB61F61D1A0000C14A4 /* libimobiledevice-node.dylib */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -220,6 +232,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				DEVELOPMENT_TEAM = T3223UKBY3;
+				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/../lib";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -228,6 +241,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				DEVELOPMENT_TEAM = T3223UKBY3;
+				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/../lib";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -251,6 +265,7 @@
 				1915A4141F6178DB007B8036 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

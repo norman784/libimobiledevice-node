@@ -7,9 +7,21 @@
 //
 
 #include <iostream>
+#include <libimobiledevice_node.h>
+
+using namespace std;
+
+void callback(string error, string data) {
+    if (!error.empty()) fprintf(stderr, "ERROR: %s\n", error.c_str());
+    fprintf(stdout, "DATA:\n\n %s\n", data.c_str());
+}
 
 int main(int argc, const char * argv[]) {
-    // insert code here...
-    std::cout << "Hello, World!\n";
-    return 0;
+    idevice_info_options options;
+    options.debug = true;
+    options.simple = false;
+    
+    idevice_info(options, callback);
+    fprintf(stdout, "\n\n===========\n\n\n");
+//    idevice_info_stream(options, stderr, stdout);
 }

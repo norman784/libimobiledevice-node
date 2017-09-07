@@ -10,14 +10,18 @@
 		1915A4181F6178ED007B8036 /* libimobiledevice.6.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1915A4161F6178ED007B8036 /* libimobiledevice.6.dylib */; };
 		1915A4191F6178ED007B8036 /* libplist.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1915A4171F6178ED007B8036 /* libplist.3.dylib */; };
 		1915A41C1F61793B007B8036 /* libimobiledevice_node.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1915A41B1F61793B007B8036 /* libimobiledevice_node.cpp */; };
+		1915A4231F618334007B8036 /* utils.c in Sources */ = {isa = PBXBuildFile; fileRef = 1915A4211F618334007B8036 /* utils.c */; };
+		1915A4241F618334007B8036 /* utils.h in Headers */ = {isa = PBXBuildFile; fileRef = 1915A4221F618334007B8036 /* utils.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		1915A3FA1F61789C007B8036 /* liblibimobiledevice-node.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = "liblibimobiledevice-node.dylib"; sourceTree = BUILT_PRODUCTS_DIR; };
+		1915A3FA1F61789C007B8036 /* libimobiledevice-node.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = "libimobiledevice-node.dylib"; sourceTree = BUILT_PRODUCTS_DIR; };
 		1915A4161F6178ED007B8036 /* libimobiledevice.6.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libimobiledevice.6.dylib; path = dependencies/lib/libimobiledevice.6.dylib; sourceTree = "<group>"; };
 		1915A4171F6178ED007B8036 /* libplist.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libplist.3.dylib; path = dependencies/lib/libplist.3.dylib; sourceTree = "<group>"; };
 		1915A41A1F617928007B8036 /* libimobiledevice_node.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = libimobiledevice_node.h; sourceTree = "<group>"; };
 		1915A41B1F61793B007B8036 /* libimobiledevice_node.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = libimobiledevice_node.cpp; sourceTree = "<group>"; };
+		1915A4211F618334007B8036 /* utils.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = utils.c; sourceTree = "<group>"; };
+		1915A4221F618334007B8036 /* utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = utils.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -45,7 +49,7 @@
 		1915A3FB1F61789C007B8036 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				1915A3FA1F61789C007B8036 /* liblibimobiledevice-node.dylib */,
+				1915A3FA1F61789C007B8036 /* libimobiledevice-node.dylib */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -53,6 +57,7 @@
 		1915A4011F6178BB007B8036 /* lib */ = {
 			isa = PBXGroup;
 			children = (
+				1915A4201F618327007B8036 /* common */,
 				1915A41A1F617928007B8036 /* libimobiledevice_node.h */,
 				1915A41B1F61793B007B8036 /* libimobiledevice_node.cpp */,
 			);
@@ -68,6 +73,15 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		1915A4201F618327007B8036 /* common */ = {
+			isa = PBXGroup;
+			children = (
+				1915A4211F618334007B8036 /* utils.c */,
+				1915A4221F618334007B8036 /* utils.h */,
+			);
+			path = common;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -75,15 +89,16 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1915A4241F618334007B8036 /* utils.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
-		1915A3F91F61789C007B8036 /* libimobiledevice-node */ = {
+		1915A3F91F61789C007B8036 /* imobiledevice-node */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 1915A3FE1F61789C007B8036 /* Build configuration list for PBXNativeTarget "libimobiledevice-node" */;
+			buildConfigurationList = 1915A3FE1F61789C007B8036 /* Build configuration list for PBXNativeTarget "imobiledevice-node" */;
 			buildPhases = (
 				1915A3F61F61789C007B8036 /* Sources */,
 				1915A3F71F61789C007B8036 /* Frameworks */,
@@ -93,9 +108,9 @@
 			);
 			dependencies = (
 			);
-			name = "libimobiledevice-node";
+			name = "imobiledevice-node";
 			productName = "libimobiledevice-node";
-			productReference = 1915A3FA1F61789C007B8036 /* liblibimobiledevice-node.dylib */;
+			productReference = 1915A3FA1F61789C007B8036 /* libimobiledevice-node.dylib */;
 			productType = "com.apple.product-type.library.dynamic";
 		};
 /* End PBXNativeTarget section */
@@ -114,7 +129,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 1915A3F51F61789B007B8036 /* Build configuration list for PBXProject "libimobiledevice-node" */;
+			buildConfigurationList = 1915A3F51F61789B007B8036 /* Build configuration list for PBXProject "imobiledevice-node" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
@@ -126,7 +141,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				1915A3F91F61789C007B8036 /* libimobiledevice-node */,
+				1915A3F91F61789C007B8036 /* imobiledevice-node */,
 			);
 		};
 /* End PBXProject section */
@@ -137,6 +152,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				1915A41C1F61793B007B8036 /* libimobiledevice_node.cpp in Sources */,
+				1915A4231F618334007B8036 /* utils.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -238,7 +254,11 @@
 				DEVELOPMENT_TEAM = T3223UKBY3;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "${PROJECT_DIR}/dependencies/lib";
 				EXECUTABLE_PREFIX = lib;
+				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/dependencies/include";
+				INSTALL_PATH = "$(INSTALL_PATH)";
+				LD_DYLIB_INSTALL_NAME = "$(DYLIB_INSTALL_NAME_BASE:standardizepath)/$(EXECUTABLE_PATH)";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/dependencies/lib",
@@ -253,7 +273,11 @@
 				DEVELOPMENT_TEAM = T3223UKBY3;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "${PROJECT_DIR}/dependencies/lib";
 				EXECUTABLE_PREFIX = lib;
+				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/dependencies/include";
+				INSTALL_PATH = "$(INSTALL_PATH)";
+				LD_DYLIB_INSTALL_NAME = "$(DYLIB_INSTALL_NAME_BASE:standardizepath)/$(EXECUTABLE_PATH)";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/dependencies/lib",
@@ -265,7 +289,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		1915A3F51F61789B007B8036 /* Build configuration list for PBXProject "libimobiledevice-node" */ = {
+		1915A3F51F61789B007B8036 /* Build configuration list for PBXProject "imobiledevice-node" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				1915A3FC1F61789C007B8036 /* Debug */,
@@ -274,7 +298,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		1915A3FE1F61789C007B8036 /* Build configuration list for PBXNativeTarget "libimobiledevice-node" */ = {
+		1915A3FE1F61789C007B8036 /* Build configuration list for PBXNativeTarget "imobiledevice-node" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				1915A3FF1F61789C007B8036 /* Debug */,

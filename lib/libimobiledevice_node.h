@@ -10,10 +10,20 @@
 #define libimobiledevice_node_h
 
 #include <iostream>
-#include <map>
 
-typedef std::map<char, char> idevice_info_options;
+using namespace std;
 
-void idevice_info(idevice_info_options options);
+typedef function<void(string error, string output)> node_callback;
+
+struct idevice_info_options {
+    bool debug;
+    bool simple;
+    char *udid;
+    char *domain;
+    char *key;
+};
+
+void idevice_info(idevice_info_options options, node_callback callback);
+void idevice_info_stream(idevice_info_options options, FILE *stream_err, FILE *stream_out);
 
 #endif /* libimobiledevice_node_h */
