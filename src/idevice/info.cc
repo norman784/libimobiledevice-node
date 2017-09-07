@@ -1,13 +1,4 @@
-//
-//  libimobiledevice_node.cpp
-//  libimobiledevice-node
-//
-//  Created by Norman Paniagua Spindler on 9/7/17.
-//  Copyright © 2017 Tatakua. All rights reserved.
-//
-
-#include "libimobiledevice_node.h"
-
+#include "info.h"
 #include <libimobiledevice/libimobiledevice.h>
 #include <libimobiledevice/lockdown.h>
 
@@ -61,7 +52,7 @@ static int is_domain_known(char *domain)
     return 0;
 }
 
-static string read_stream(FILE *stream) {
+string read_stream(FILE *stream) {
     string result;
     char buff[4096];
 

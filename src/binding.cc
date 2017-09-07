@@ -1,24 +1,9 @@
-#include <libimobiledevice_node.h>
+#include <idevice/info.h>
 #include <node.h>
 
 using namespace v8;
 
 namespace idevice_info_node {
-  static string read_stream(FILE *stream) {
-    string result;
-    char buff[4096];
-
-    rewind(stream);
-
-    while (fgets(buff, sizeof(buff), stream)) {
-      result += string(buff);
-    }
-
-    fflush(stream);
-
-    return result;
-  }
-
   void info(const FunctionCallbackInfo<Value>& args) {
     Isolate* isolate = args.GetIsolate();
 
