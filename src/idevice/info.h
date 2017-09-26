@@ -1,25 +1,18 @@
-#include <iostream>
+#ifndef info_h
+#define info_h
 
-#ifndef idevice_info_h
-#define idevice_info_h
-
-#include <iostream>
-
-using namespace std;
-
-typedef function<void(string error, string output)> node_callback;
-
-string read_stream(FILE *stream);
+#include <stdio.h>
+#include <stdbool.h>
+#include "common/common_binding.h"
 
 struct idevice_info_options {
-    bool debug = false;
-    bool simple = false;
-    char *udid = NULL;
-    char *domain = NULL;
-    char *key = NULL;
+    bool debug;
+    bool simple;
+    char *udid;
+    char *domain;
+    char *key;
 };
 
-void idevice_info(idevice_info_options options, node_callback callback);
-void idevice_info_stream(idevice_info_options options, FILE *stream_err, FILE *stream_out);
+void idevice_info(struct idevice_info_options options, FILE *stream_err, FILE *stream_out);
 
-#endif /* idevice_info_h */
+#endif /* info_h */

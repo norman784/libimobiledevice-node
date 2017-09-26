@@ -2,9 +2,7 @@
 #include <libimobiledevice/libimobiledevice.h>
 #include <libimobiledevice/lockdown.h>
 
-extern "C" {
-    #include "common/utils.h"
-}
+#include "common/utils.h"
 
 static const char *domains[] = {
     "com.apple.disk_usage",
@@ -52,42 +50,35 @@ static int is_domain_known(char *domain)
     return 0;
 }
 
-string read_stream(FILE *stream) {
-    string result;
-    char buff[4096];
-
+char* read_stream(FILE *stream) {
+    long lSize;
+    char *buffer;
+    
+    fseek(stream, 0L, SEEK_END);
+    lSize = ftell(stream);
     rewind(stream);
-
-    while (fgets(buff, sizeof(buff), stream)) {
-        result += string(buff);
-    }
-
+    
+    buffer = calloc(1, lSize+1);
+    
+    fread(buffer, lSize, 1, stream);
+    
     fflush(stream);
-
-    return result;
+    
+    return buffer;
 }
 
-void idevice_info(idevice_info_options options, node_callback callback) {
-    FILE *err = tmpfile();
-    FILE *data = tmpfile();
-
-    idevice_info_stream(options, err, data);
-
-    callback(read_stream(err), read_stream(data));
-}
-
-void idevice_info_stream(idevice_info_options options, FILE *stream_err, FILE *stream_out) {
+void idevice_info(struct idevice_info_options options, FILE *stream_err, FILE *stream_out) {
     lockdownd_client_t client = NULL;
     lockdownd_error_t ldret = LOCKDOWN_E_UNKNOWN_ERROR;
     idevice_t device = NULL;
     idevice_error_t ret = IDEVICE_E_UNKNOWN_ERROR;
     plist_t node = NULL;
-
+    
     const char* udid = NULL;
     char *domain = NULL;
     char *key = NULL;
     int simple = 0;
-
+    
     if (options.debug) idevice_set_debug_level(1);
     if (options.domain) {
         if (!is_domain_known(options.domain)) {
@@ -99,15 +90,15 @@ void idevice_info_stream(idevice_info_options options, FILE *stream_err, FILE *s
     if (options.key) key = options.key;
     if (options.simple) simple = 1;
     if (options.udid) udid = options.udid;
-
+    
     ret = idevice_new(&device, udid);
-
+    
     if (ret != IDEVICE_E_SUCCESS) {
         if (udid) fprintf(stream_err, "No device found with udid %s, is it plugged in?\n", udid);
         else fprintf(stream_err, "No device found, is it plugged in?\n");
         return;
     }
-
+    
     if (LOCKDOWN_E_SUCCESS != (ldret = simple ?
                                lockdownd_client_new(device, &client, "ideviceinfo"):
                                lockdownd_client_new_with_handshake(device, &client, "ideviceinfo"))) {
@@ -115,12 +106,12 @@ void idevice_info_stream(idevice_info_options options, FILE *stream_err, FILE *s
         idevice_free(device);
         return;
     }
-
+    
     if(lockdownd_get_value(client, domain, key, &node) == LOCKDOWN_E_SUCCESS) {
         plist_print_to_stream(node, stream_out);
         plist_free(node);
     }
-
+    
     if (domain != NULL) free(domain);
     lockdownd_client_free(client);
     idevice_free(device);

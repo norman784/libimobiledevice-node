@@ -2,7 +2,17 @@
     "targets": [
         {
           "target_name": "binding",
-          "sources": [ "src/binding.cc", "src/idevice/info.cc", "src/common/utils.c" ],
+          "sources": [ 
+            "src/binding.cc",
+            "src/idevice/info.h",
+            "src/idevice/info.c",
+            "src/idevice/backup2.h",
+            "src/idevice/backup2.c",
+            "src/common/endianness.h",
+            "src/common/common_binding.h",
+            "src/common/utils.h",
+            "src/common/utils.c"
+          ],
           "include_dirs": [
             "dependencies/include",
             "src"
