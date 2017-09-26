@@ -5,7 +5,7 @@
   "main": "lib/libimobiledevice.js",
   "repository": "https://github.com/norman784/libimobiledevice-node",
   "author": "Norman Paniagua (https://github.com/norman784)",
-  "license": "GPL-2.0",
+  "license": "MIT",
   "dependencies": {
     "node-gyp": "^3.6.2"
   },
