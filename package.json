@@ -39,7 +39,7 @@
     "preinstall": "yarn clone && yarn make && yarn clean:tmp && yarn _link",
     "install": "node-gyp rebuild -d",
     "start": "node index.js",
-    "test": "cd test && node index.js",
+    "test": "echo 'Not implemented yet'",
     "compile": "node-gyp rebuild -d",
     "xcode": "node-gyp configure -- -f xcode"
   }
