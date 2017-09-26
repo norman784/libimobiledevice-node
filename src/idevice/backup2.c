@@ -48,6 +48,7 @@ static int verbose = 1;
 static int quit_flag = 0;
 
 #define PRINT_VERBOSE(min_level, ...) if (verbose >= min_level) { fprintf(__VA_ARGS__); };
+#define PRINT_VERBOSE_DEBUG(min_level, ...) if (verbose >= min_level) { printf(__VA_ARGS__); };
 
 enum cmd_mode {
     CMD_BACKUP,
@@ -687,6 +688,7 @@ static int mb2_handle_send_file(FILE *stream_err, FILE *stream_out, mobilebackup
     
     char *format_size = string_format_size(total);
     PRINT_VERBOSE(1, stream_out, "Sending '%s' (%s)\n", path, format_size);
+    PRINT_VERBOSE_DEBUG(1, "Sending '%s' (%s)\n", path, format_size);
     free(format_size);
     
     if (total == 0) {
@@ -893,6 +895,7 @@ static int mb2_handle_receive_files(FILE *stream_error, FILE *stream_out, node_p
     }
     if (backup_total_size > 0) {
         PRINT_VERBOSE(1, stream_out, "Receiving files\n");
+        PRINT_VERBOSE_DEBUG(1, "Receiving files\n");
     }
     
     do {
@@ -942,6 +945,7 @@ static int mb2_handle_receive_files(FILE *stream_error, FILE *stream_out, node_p
         /* TODO remove this */
         if ((code != CODE_SUCCESS) && (code != CODE_FILE_DATA) && (code != CODE_ERROR_REMOTE)) {
             PRINT_VERBOSE(1, stream_out, "Found new flag %02x\n", code);
+            PRINT_VERBOSE_DEBUG(1, "Found new flag %02x\n", code);
         }
         
         remove_file(bname);
@@ -1011,6 +1015,7 @@ static int mb2_handle_receive_files(FILE *stream_error, FILE *stream_out, node_p
     /* if there are leftovers to read, finish up cleanly */
     if ((int)nlen-1 > 0) {
         PRINT_VERBOSE(1, stream_out, "\nDiscarding current data hunk.\n");
+        PRINT_VERBOSE_DEBUG(1, "\nDiscarding current data hunk.\n");
         fname = (char*)malloc(nlen-1);
         mobilebackup2_receive_raw(mobilebackup2, fname, nlen-1, &r);
         free(fname);
@@ -1475,10 +1480,12 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
             free(manifest_path);
         }
         PRINT_VERBOSE(1, stream_out, "Backup directory is \"%s\"\n", backup_directory);
+        PRINT_VERBOSE_DEBUG(1, "Backup directory is \"%s\"\n", backup_directory);
     }
     
     if (cmd != CMD_CLOUD && is_encrypted) {
         PRINT_VERBOSE(1, stream_out, "This is an encrypted backup.\n");
+        PRINT_VERBOSE_DEBUG(1, "This is an encrypted backup.\n");
         if (backup_password == NULL) {
             if (interactive_mode) {
                 backup_password = ask_for_password("Enter backup password", 0);
@@ -1544,6 +1551,7 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
     ldret = lockdownd_start_service_with_escrow_bag(lockdown, MOBILEBACKUP2_SERVICE_NAME, &service);
     if ((ldret == LOCKDOWN_E_SUCCESS) && service && service->port) {
         PRINT_VERBOSE(1, stream_out, "Started \"%s\" service on port %d.\n", MOBILEBACKUP2_SERVICE_NAME, service->port);
+        PRINT_VERBOSE_DEBUG(1, "Started \"%s\" service on port %d.\n", MOBILEBACKUP2_SERVICE_NAME, service->port);
         mobilebackup2_client_new(device, service, &mobilebackup2);
         
         if (service) {
@@ -1562,10 +1570,12 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
         }
         
         PRINT_VERBOSE(1, stream_out, "Negotiated Protocol Version %.1f\n", remote_version);
+        PRINT_VERBOSE_DEBUG(1, "Negotiated Protocol Version %.1f\n", remote_version);
         
         /* check abort conditions */
         if (quit_flag > 0) {
             PRINT_VERBOSE(1, stream_out, "Aborting as requested by user...\n");
+            PRINT_VERBOSE_DEBUG(1, "Aborting as requested by user...\n");
             cmd = CMD_LEAVE;
             goto checkpoint;
         }
@@ -1573,6 +1583,7 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
         /* verify existing Info.plist */
         if (info_path && (stat(info_path, &st) == 0) && cmd != CMD_CLOUD) {
             PRINT_VERBOSE(1, stream_out, "Reading Info.plist from backup.\n");
+            PRINT_VERBOSE_DEBUG(1, "Reading Info.plist from backup.\n");
             plist_read_from_filename(&info_plist, info_path);
             
             if (!info_plist) {
@@ -1645,6 +1656,7 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
                 break;
             case CMD_BACKUP:
                 PRINT_VERBOSE(1, stream_out, "Starting backup...\n");
+                PRINT_VERBOSE_DEBUG(1, "Starting backup...\n");
                 
                 /* make sure backup device sub-directory exists */
                 char* devbackupdir = string_build_path(backup_directory, source_udid, NULL);
@@ -1681,24 +1693,30 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
                 
                 if (cmd_flags & CMD_FLAG_FORCE_FULL_BACKUP) {
                     PRINT_VERBOSE(1, stream_out, "Enforcing full backup from device.\n");
+                    PRINT_VERBOSE_DEBUG(1, "Enforcing full backup from device.\n");
                     opts = plist_new_dict();
                     plist_dict_set_item(opts, "ForceFullBackup", plist_new_bool(1));
                 }
                 /* request backup from device with manifest from last backup */
                 if (willEncrypt) {
                     PRINT_VERBOSE(1, stream_out, "Backup will be encrypted.\n");
+                    PRINT_VERBOSE_DEBUG(1, "Backup will be encrypted.\n");
                 } else {
                     PRINT_VERBOSE(1, stream_out, "Backup will be unencrypted.\n");
+                    PRINT_VERBOSE_DEBUG(1, "Backup will be unencrypted.\n");
                 }
                 PRINT_VERBOSE(1, stream_out, "Requesting backup from device...\n");
+                PRINT_VERBOSE_DEBUG(1, "Requesting backup from device...\n");
                 err = mobilebackup2_send_request(mobilebackup2, "Backup", udid, source_udid, opts);
                 if (opts)
                     plist_free(opts);
                 if (err == MOBILEBACKUP2_E_SUCCESS) {
                     if (is_full_backup) {
                         PRINT_VERBOSE(1, stream_out, "Full backup mode.\n");
+                        PRINT_VERBOSE_DEBUG(1, "Full backup mode.\n");
                     }	else {
                         PRINT_VERBOSE(1, stream_out, "Incremental backup mode.\n");
+                        PRINT_VERBOSE_DEBUG(1, "Incremental backup mode.\n");
                     }
                 } else {
                     if (err == MOBILEBACKUP2_E_BAD_VERSION) {
@@ -1722,25 +1740,32 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
                 }
                 
                 PRINT_VERBOSE(1, stream_out, "Starting Restore...\n");
+                PRINT_VERBOSE_DEBUG(1, "Starting Restore...\n");
                 
                 opts = plist_new_dict();
                 plist_dict_set_item(opts, "RestoreSystemFiles", plist_new_bool(cmd_flags & CMD_FLAG_RESTORE_SYSTEM_FILES));
-                PRINT_VERBOSE(1, stream_out, "Restoring system files: %s\n", (cmd_flags & CMD_FLAG_RESTORE_SYSTEM_FILES ? "Yes":"No"));
+                PRINT_VERBOSE(1, stream_out, "Restoring system files: %s\n", (cmd_flags & CMD_FLAG_RESTORE_SYSTEM_FILES ? "YES" : "NO"));
+                PRINT_VERBOSE_DEBUG(1, "Restoring system files: %s\n", (cmd_flags & CMD_FLAG_RESTORE_SYSTEM_FILES ?                                                                               "Yes":"No"));
                 if ((cmd_flags & CMD_FLAG_RESTORE_REBOOT) == 0)
                     plist_dict_set_item(opts, "RestoreShouldReboot", plist_new_bool(0));
-                PRINT_VERBOSE(1, stream_out, "Rebooting after restore: %s\n", (cmd_flags & CMD_FLAG_RESTORE_REBOOT ? "Yes":"No"));
+                PRINT_VERBOSE(1, stream_out, "Rebooting after restore: %s\n", (cmd_flags & CMD_FLAG_RESTORE_REBOOT ? "YES" : "NO"));
+                PRINT_VERBOSE_DEBUG(1, "Rebooting after restore: %s\n", (cmd_flags & CMD_FLAG_RESTORE_REBOOT ?                                                                                "Yes":"No"));
                 if ((cmd_flags & CMD_FLAG_RESTORE_COPY_BACKUP) == 0)
                     plist_dict_set_item(opts, "RestoreDontCopyBackup", plist_new_bool(1));
-                PRINT_VERBOSE(1, stream_out, "Don't copy backup: %s\n", ((cmd_flags & CMD_FLAG_RESTORE_COPY_BACKUP) == 0 ? "Yes":"No"));
+                PRINT_VERBOSE(1, stream_out, "Don't copy backup: %s\n", ((cmd_flags & CMD_FLAG_RESTORE_COPY_BACKUP) == 0 ? "YES" : "NO"));
+                PRINT_VERBOSE_DEBUG(1, "Don't copy backup: %s\n", ((cmd_flags & CMD_FLAG_RESTORE_COPY_BACKUP) ==                                                                          0 ? "Yes":"No"));
                 plist_dict_set_item(opts, "RestorePreserveSettings", plist_new_bool((cmd_flags & CMD_FLAG_RESTORE_SETTINGS) == 0));
-                PRINT_VERBOSE(1, stream_out, "Preserve settings of device: %s\n", ((cmd_flags & CMD_FLAG_RESTORE_SETTINGS) == 0 ? "Yes":"No"));
+                PRINT_VERBOSE(1, stream_out, "Preserve settings of device: %s\n", ((cmd_flags & CMD_FLAG_RESTORE_SETTINGS) == 0 ? "YES" : "NO"));
+                PRINT_VERBOSE_DEBUG(1, "Preserve settings of device: %s\n", ((cmd_flags & CMD_FLAG_RESTORE_SETTINGS) ==                                                                                    0 ? "Yes":"No"));
                 if (cmd_flags & CMD_FLAG_RESTORE_REMOVE_ITEMS)
                     plist_dict_set_item(opts, "RemoveItemsNotRestored", plist_new_bool(1));
                 PRINT_VERBOSE(1, stream_out, "Remove items that are not restored: %s\n", ((cmd_flags & CMD_FLAG_RESTORE_REMOVE_ITEMS) ? "Yes":"No"));
+                PRINT_VERBOSE_DEBUG(1, "Remove items that are not restored: %s\n", ((cmd_flags &                                                                                            CMD_FLAG_RESTORE_REMOVE_ITEMS) ? "Yes":"No"));
                 if (backup_password != NULL) {
                     plist_dict_set_item(opts, "Password", plist_new_string(backup_password));
                 }
                 PRINT_VERBOSE(1, stream_out, "Backup password: %s\n", (backup_password == NULL ? "No":"Yes"));
+                PRINT_VERBOSE_DEBUG(1, "Backup password: %s\n", (backup_password == NULL ? "No":"Yes"));
                 
                 err = mobilebackup2_send_request(mobilebackup2, "Restore", udid, source_udid, opts);
                 plist_free(opts);
@@ -1757,6 +1782,7 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
                 break;
             case CMD_INFO:
                 PRINT_VERBOSE(1, stream_out, "Requesting backup info from device...\n");
+                PRINT_VERBOSE_DEBUG(1, "Requesting backup info from device...\n");
                 err = mobilebackup2_send_request(mobilebackup2, "Info", udid, source_udid, NULL);
                 if (err != MOBILEBACKUP2_E_SUCCESS) {
                     fprintf(stream_err, "Error requesting backup info from device, error code %d\n", err);
@@ -1765,6 +1791,7 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
                 break;
             case CMD_LIST:
                 PRINT_VERBOSE(1, stream_out, "Requesting backup list from device...\n");
+                PRINT_VERBOSE_DEBUG(1, "Requesting backup list from device...\n");
                 err = mobilebackup2_send_request(mobilebackup2, "List", udid, source_udid, NULL);
                 if (err != MOBILEBACKUP2_E_SUCCESS) {
                     fprintf(stream_err, "Error requesting backup list from device, error code %d\n", err);
@@ -1773,11 +1800,13 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
                 break;
             case CMD_UNBACK:
                 PRINT_VERBOSE(1, stream_out, "Starting to unpack backup...\n");
+                PRINT_VERBOSE_DEBUG(1, "Starting to unpack backup...\n");
                 if (backup_password != NULL) {
                     opts = plist_new_dict();
                     plist_dict_set_item(opts, "Password", plist_new_string(backup_password));
                 }
                 PRINT_VERBOSE(1, stream_out, "Backup password: %s\n", (backup_password == NULL ? "No":"Yes"));
+                PRINT_VERBOSE_DEBUG(1, "Backup password: %s\n", (backup_password == NULL ? "No":"Yes"));
                 err = mobilebackup2_send_request(mobilebackup2, "Unback", udid, source_udid, opts);
                 if (backup_password !=NULL) {
                     plist_free(opts);
@@ -1885,6 +1914,7 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
                 mobilebackup2_receive_message(mobilebackup2, &message, &dlmsg);
                 if (!message || !dlmsg) {
                     PRINT_VERBOSE(1, stream_out, "Device is not ready yet. Going to try again in 2 seconds...\n");
+                    PRINT_VERBOSE_DEBUG(1, "Device is not ready yet. Going to try again in 2 seconds...\n");
                     sleep(2);
                     goto files_out;
                 }
@@ -1928,6 +1958,7 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
                     plist_t moves = plist_array_get_item(message, 1);
                     uint32_t cnt = plist_dict_get_size(moves);
                     PRINT_VERBOSE(1, stream_out, "Moving %d file%s\n", cnt, (cnt == 1) ? "" : "s");
+                    PRINT_VERBOSE_DEBUG(1, "Moving %d file%s\n", cnt, (cnt == 1) ? "" : "s");
                     plist_dict_iter iter = NULL;
                     plist_dict_new_iter(moves, &iter);
                     errcode = 0;
@@ -1979,6 +2010,7 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
                     plist_t removes = plist_array_get_item(message, 1);
                     uint32_t cnt = plist_array_get_size(removes);
                     PRINT_VERBOSE(1, stream_out, "Removing %d file%s\n", cnt, (cnt == 1) ? "" : "s");
+                    PRINT_VERBOSE_DEBUG(1, "Removing %d file%s\n", cnt, (cnt == 1) ? "" : "s");
                     uint32_t ii = 0;
                     errcode = 0;
                     errdesc = NULL;
@@ -2034,6 +2066,7 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
                             char *newpath = string_build_path(backup_directory, dst, NULL);
                             
                             PRINT_VERBOSE(1, stream_out, "Copying '%s' to '%s'\n", src, dst);
+                            PRINT_VERBOSE_DEBUG(1, "Copying '%s' to '%s'\n", src, dst);
                             
                             /* check that src exists */
                             if ((stat(oldpath, &st) == 0) && S_ISDIR(st.st_mode)) {
@@ -2095,6 +2128,7 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
                         str = NULL;
                         plist_get_string_val(nn, &str);
                         PRINT_VERBOSE(1, stream_out, "Content:\n");
+                        PRINT_VERBOSE_DEBUG(1, "Content:\n");
                         printf("%s", str);
                         free(str);
                     }
@@ -2140,65 +2174,85 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
                     if (cmd_flags & CMD_FLAG_CLOUD_ENABLE) {
                         if (operation_ok) {
                             PRINT_VERBOSE(1, stream_out, "Cloud backup has been enabled successfully.\n");
+                            PRINT_VERBOSE_DEBUG(1, "Cloud backup has been enabled successfully.\n");
                         } else {
                             PRINT_VERBOSE(1, stream_out, "Could not enable cloud backup.\n");
+                            PRINT_VERBOSE_DEBUG(1, "Could not enable cloud backup.\n");
                         }
                     } else if (cmd_flags & CMD_FLAG_CLOUD_DISABLE) {
                         if (operation_ok) {
                             PRINT_VERBOSE(1, stream_out, "Cloud backup has been disabled successfully.\n");
+                            PRINT_VERBOSE_DEBUG(1, "Cloud backup has been disabled successfully.\n");
                         } else {
                             PRINT_VERBOSE(1, stream_out, "Could not disable cloud backup.\n");
+                            PRINT_VERBOSE_DEBUG(1, "Could not disable cloud backup.\n");
                         }
                     }
                     break;
                 case CMD_BACKUP:
                     PRINT_VERBOSE(1, stream_out, "Received %d files from device.\n", file_count);
+                    PRINT_VERBOSE_DEBUG(1, "Received %d files from device.\n", file_count);
                     if (operation_ok && mb2_status_check_snapshot_state(backup_directory, udid, "finished")) {
                         PRINT_VERBOSE(1, stream_out, "Backup Successful.\n");
+                        PRINT_VERBOSE_DEBUG(1, "Backup Successful.\n");
                     } else {
                         if (quit_flag) {
                             PRINT_VERBOSE(1, stream_out, "Backup Aborted.\n");
+                            PRINT_VERBOSE_DEBUG(1, "Backup Aborted.\n");
                         } else {
                             PRINT_VERBOSE(1, stream_out, "Backup Failed (Error Code %d).\n", -result_code);
+                            PRINT_VERBOSE_DEBUG(1, "Backup Failed (Error Code %d).\n", -result_code);
                         }
                     }
                     break;
                 case CMD_UNBACK:
                     if (quit_flag) {
                         PRINT_VERBOSE(1, stream_out, "Unback Aborted.\n");
+                        PRINT_VERBOSE_DEBUG(1, "Unback Aborted.\n");
                     } else {
                         PRINT_VERBOSE(1, stream_out, "The files can now be found in the \"_unback_\" directory.\n");
+                        PRINT_VERBOSE_DEBUG(1, "The files can now be found in the \"_unback_\" directory.\n");
                         PRINT_VERBOSE(1, stream_out, "Unback Successful.\n");
+                        PRINT_VERBOSE_DEBUG(1, "Unback Successful.\n");
                     }
                     break;
                 case CMD_CHANGEPW:
                     if (cmd_flags & CMD_FLAG_ENCRYPTION_ENABLE) {
                         if (operation_ok) {
                             PRINT_VERBOSE(1, stream_out, "Backup encryption has been enabled successfully.\n");
+                            PRINT_VERBOSE_DEBUG(1, "Backup encryption has been enabled successfully.\n");
                         } else {
                             PRINT_VERBOSE(1, stream_out, "Could not enable backup encryption.\n");
+                            PRINT_VERBOSE_DEBUG(1, "Could not enable backup encryption.\n");
                         }
                     } else if (cmd_flags & CMD_FLAG_ENCRYPTION_DISABLE) {
                         if (operation_ok) {
                             PRINT_VERBOSE(1, stream_out, "Backup encryption has been disabled successfully.\n");
+                            PRINT_VERBOSE_DEBUG(1, "Backup encryption has been disabled successfully.\n");
                         } else {
                             PRINT_VERBOSE(1, stream_out, "Could not disable backup encryption.\n");
+                            PRINT_VERBOSE_DEBUG(1, "Could not disable backup encryption.\n");
                         }
                     } else if (cmd_flags & CMD_FLAG_ENCRYPTION_CHANGEPW) {
                         if (operation_ok) {
                             PRINT_VERBOSE(1, stream_out, "Backup encryption password has been changed successfully.\n");
+                            PRINT_VERBOSE_DEBUG(1, "Backup encryption password has been changed successfully.\n");
                         } else {
                             PRINT_VERBOSE(1, stream_out, "Could not change backup encryption password.\n");
+                            PRINT_VERBOSE_DEBUG(1, "Could not change backup encryption password.\n");
                         }
                     }
                     break;
                 case CMD_RESTORE:
                     if (cmd_flags & CMD_FLAG_RESTORE_REBOOT)
                         PRINT_VERBOSE(1, stream_out, "The device should reboot now.\n");
+                        PRINT_VERBOSE_DEBUG(1, "The device should reboot now.\n");
                     if (operation_ok) {
                         PRINT_VERBOSE(1, stream_out, "Restore Successful.\n");
+                        PRINT_VERBOSE_DEBUG(1, "Restore Successful.\n");
                     } else {
                         PRINT_VERBOSE(1, stream_out, "Restore Failed (Error Code %d).\n", -result_code);
+                        PRINT_VERBOSE_DEBUG(1, "Restore Failed (Error Code %d).\n", -result_code);
                     }
                     break;
                 case CMD_INFO:
@@ -2207,10 +2261,13 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
                 default:
                     if (quit_flag) {
                         PRINT_VERBOSE(1, stream_out, "Operation Aborted.\n");
+                        PRINT_VERBOSE_DEBUG(1, "Operation Aborted.\n");
                     } else if (cmd == CMD_LEAVE) {
                         PRINT_VERBOSE(1, stream_out, "Operation Failed.\n");
+                        PRINT_VERBOSE_DEBUG(1, "Operation Failed.\n");
                     } else {
                         PRINT_VERBOSE(1, stream_out, "Operation Successful.\n");
+                        PRINT_VERBOSE_DEBUG(1, "Operation Successful.\n");
                     }
                     break;
             }
