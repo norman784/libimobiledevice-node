@@ -1,5 +1,5 @@
 {
-  "name": "libimobiledevice-node",
+  "name": "libimobiledevice",
   "version": "1.2.1",
   "description": "A cross-platform software protocol library and tools to communicate with iOS® devices natively.",
   "main": "lib/libimobiledevice.js",
