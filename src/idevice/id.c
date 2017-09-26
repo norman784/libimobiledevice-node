@@ -13,15 +13,9 @@
 #define MODE_LIST_DEVICES 2
 
 void idevice_id(FILE *stream_out) {
-    idevice_t device = NULL;
-    lockdownd_client_t client = NULL;
     char **dev_list = NULL;
-    char *device_name = NULL;
-    int ret = 0;
     int i;
-    int mode = MODE_LIST_DEVICES;
-    const char* udid = NULL;
-
+    
     idevice_set_debug_level(1);
 
     if (idevice_get_device_list(&dev_list, &i) < 0) {

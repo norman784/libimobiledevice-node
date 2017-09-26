@@ -34,6 +34,7 @@ struct idevice_backup2_options {
     bool unback;
     struct idevice_backup2_options_enciptation encryption;
     struct idevice_backup2_options_changepw changepw;
+    bool interactive;
     char *backup_directory;
 };
 

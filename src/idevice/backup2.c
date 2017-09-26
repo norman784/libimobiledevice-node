@@ -1315,6 +1315,7 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
     if (options.copy) cmd_flags |= CMD_FLAG_RESTORE_COPY_BACKUP;
     if (options.settings) cmd_flags |= CMD_FLAG_RESTORE_SETTINGS;
     if (options.remove) cmd_flags |= CMD_FLAG_RESTORE_REMOVE_ITEMS;
+    if (options.interactive) interactive_mode = 1;
     if (options.password != NULL) {
         if (backup_password) free(backup_password);
         backup_password = strdup(options.password);

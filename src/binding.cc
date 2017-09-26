@@ -76,6 +76,7 @@ namespace idevice_info_node {
         Handle<Value> list = object->Get(String::NewFromUtf8(_isolate, "list"));
         Handle<Value> unback = object->Get(String::NewFromUtf8(_isolate, "unback"));
         Handle<Value> encryption = object->Get(String::NewFromUtf8(_isolate, "encryption"));
+        Handle<Value> interactive = object->Get(String::NewFromUtf8(_isolate, "interactive"));
         Handle<Value> changepw = object->Get(String::NewFromUtf8(_isolate, "changepw"));
         Handle<Value> backup_directory = object->Get(String::NewFromUtf8(_isolate, "backup_directory"));
         
@@ -96,6 +97,7 @@ namespace idevice_info_node {
         options.info = false;
         options.list = false;
         options.unback = false;
+        options.interactive = false;
         options.encryption.status = NULL;
         options.encryption.password = NULL;
         options.changepw.backup_password = NULL;
@@ -117,6 +119,7 @@ namespace idevice_info_node {
         if (full->IsBoolean()) { options.full = full->BooleanValue(); }
         if (info->IsBoolean()) { options.info = info->BooleanValue(); }
         if (list->IsBoolean()) { options.list = list->BooleanValue(); }
+        if (interactive->IsBoolean()) { options.interactive = interactive->BooleanValue(); }
         if (unback->IsBoolean()) { options.unback = unback->BooleanValue(); }
         if (backup_directory->IsString()) { options.backup_directory = ToCString(backup_directory); }
         if (encryption->IsObject()) {
