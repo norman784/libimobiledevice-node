@@ -3,6 +3,8 @@
 #include <libimobiledevice/lockdown.h>
 
 #include "common/utils.h"
+#include <string.h>
+#include <stdlib.h>
 
 static const char *domains[] = {
     "com.apple.disk_usage",
