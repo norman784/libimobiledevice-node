@@ -1,6 +1,7 @@
 extern "C" {
-#include <idevice/info.h>
-#include <idevice/backup2.h>
+    #include <idevice/id.h>
+    #include <idevice/info.h>
+    #include <idevice/backup2.h>
 }
 
 #include <node.h>
@@ -180,10 +181,25 @@ namespace idevice_info_node {
         
         callback->Call(Null(isolate), 2, res);
     }
+
+    void id(const FunctionCallbackInfo<Value>& args) {
+        Isolate* isolate = args.GetIsolate();
+        Local<Function> callback = Local<Function>::Cast(args[0]);
+
+        FILE *data = tmpfile();
+        
+        idevice_id(data);
+        
+        Handle<Value> res[1];
+        res[0] = String::NewFromUtf8(isolate, read_stream(data));
+        
+        callback->Call(Null(isolate), 1, res);
+    }
 }
 void Initialize(Local<Object> exports) {
     NODE_SET_METHOD(exports, "idevice_backup2", idevice_info_node::backup2);
     NODE_SET_METHOD(exports, "idevice_info", idevice_info_node::info);
+    NODE_SET_METHOD(exports, "idevice_id", idevice_info_node::id);
 }
 
 NODE_MODULE(binding, Initialize);

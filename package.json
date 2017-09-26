@@ -36,6 +36,7 @@
     "clean:tmp": "rm -rf tmp",
     "clean:dependencies": "rm -rf $npm_package_config_install_dir",
     "__preinstall": "yarn clone && yarn make",
+    "install": "node-gyp rebuild -d",
     "start": "node index.js",
     "test": "cd test && node index.js",
     "compile": "node-gyp rebuild -d",
