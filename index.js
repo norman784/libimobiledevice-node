@@ -1,4 +1,3 @@
-// const lib = require(`${__dirname}/build/Debug/libimobiledevice.node`)
 const cp = require('child_process')
 
 exports.backup2 = function(options, callback, progress) {
