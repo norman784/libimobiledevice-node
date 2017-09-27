@@ -1,6 +1,6 @@
 {
   "name": "libimobiledevice",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "A cross-platform software protocol library and tools to communicate with iOS® devices natively.",
   "main": "lib/libimobiledevice.js",
   "repository": "https://github.com/norman784/libimobiledevice-node",
@@ -9,36 +9,9 @@
   "dependencies": {
     "node-gyp": "^3.6.2"
   },
-  "config": {
-    "openssl_url": "https://www.openssl.org/source/openssl-1.0.2l.tar.gz",
-    "openssl_file": "openssl-1.0.2l.tar.gz",
-    "openssl_dir": "openssl-1.0.2l",
-    "libplist_url": "https://github.com/libimobiledevice/libplist.git",
-    "libplist_dir": "libplist",
-    "libusbmuxd_url": "https://github.com/libimobiledevice/libusbmuxd.git",
-    "libusbmuxd_dir": "libusbmuxd",
-    "libimobiledevice_url": "https://github.com/libimobiledevice/libimobiledevice.git",
-    "libimobiledevice_dir": "libimobiledevice",
-    "install_dir": "dependencies"
-  },
   "scripts": {
-    "clone": "yarn clean:tmp && mkdir tmp && yarn clone:openssl && yarn clone:libplist && yarn clone:libusbmuxd && yarn clone:libimobiledevice",
-    "clone:openssl": "cd tmp && curl -OL $npm_package_config_openssl_url && tar xvzf $npm_package_config_openssl_file",
-    "clone:libplist": "cd tmp && git clone $npm_package_config_libplist_url",
-    "clone:libusbmuxd": "cd tmp && git clone $npm_package_config_libusbmuxd_url",
-    "clone:libimobiledevice": "cd tmp && git clone $npm_package_config_libimobiledevice_url",
-    "make": "yarn clean:dependencies && mkdir $npm_package_config_install_dir && yarn make:openssl && yarn make:libplist && yarn make:libusbmuxd && yarn make:libimobiledevice && yarn clean:tmp",
-    "make:openssl": "export INSTALL_PATH=$PWD/$npm_package_config_install_dir && cd tmp/$npm_package_config_openssl_dir && ./Configure --prefix=$INSTALL_PATH --openssldir=$INSTALL_PATH/openssl darwin64-x86_64-cc && make && make install_sw",
-    "make:libplist": "export npm_package_config_library_dir=$npm_package_config_libplist_dir && yarn make:generic",
-    "make:libusbmuxd": "export npm_package_config_library_dir=$npm_package_config_libusbmuxd_dir && yarn make:generic",
-    "make:libimobiledevice": "export INSTALL_PATH=$PWD/$npm_package_config_install_dir && export npm_package_config_pkg_dir=$INSTALL_PATH/lib/pkgconfig && export PKG_CONFIG_PATH=$INSTALL_PATH/lib/pkgconfig && export LD_LIBRARY_PATH=\"${INSTALL_PATH}/lib:${LD_LIBRARY_PATH}\" && export CPATH=\"${INSTALL_PATH}/include/openssl:${CPATH}\" && cd tmp/$npm_package_config_libimobiledevice_dir && ./autogen.sh && ./configure --prefix=$INSTALL_PATH && make && make install",
-    "make:generic": "export INSTALL_PATH=$PWD/$npm_package_config_install_dir && cd tmp/$npm_package_config_library_dir && ./autogen.sh && ./configure --prefix=$INSTALL_PATH && make && make install",
-    "clean:tmp": "rm -rf tmp",
-    "clean:dependencies": "rm -rf $npm_package_config_install_dir",
-    "_link": "sh ./link.sh $PWD/dependencies",
-    "preinstall": "yarn clone && yarn make && yarn clean:tmp && yarn _link",
-    "install": "node-gyp rebuild -d",
-    "start": "node index.js",
+    "preinstall": "sh install.sh",
+    "install": "node-gyp rebuild",
     "test": "echo 'Not implemented yet'",
     "compile": "node-gyp rebuild -d",
     "xcode": "node-gyp configure -- -f xcode"
