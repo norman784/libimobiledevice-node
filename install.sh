@@ -8,7 +8,7 @@ export tmp_path="$root_path/$tmp_dir"
 export openssl_url="https://www.openssl.org/source/openssl-1.0.2l.tar.gz"
 export openssl_file="openssl-1.0.2l.tar.gz"
 export openssl_dir="openssl-1.0.2l"
-export openssl_check_file="${install_dir}/bin/openssl"
+export openssl_check_file="${install_dir}/include/openssl/opensslv.h"
 export libplist_url="https://github.com/libimobiledevice/libplist.git"
 export libplist_dir="libplist"
 export libplist_check_file="${install_dir}/lib/libplist.la"
@@ -110,6 +110,8 @@ fi
 # clean
 cd $root_path
 rm -rf $tmp_dir
+# remove binaries, we don't need them
+rm -rf $install_dir/bin
 
 echo ""
 echo "Change absolute path to relative path"
