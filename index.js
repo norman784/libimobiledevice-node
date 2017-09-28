@@ -21,7 +21,6 @@ exports.backup2 = function(options, callback, progress) {
 		const child = cp.fork(`${__dirname}/lib/backup2_worker`)
 		child.send(options)
 		child.on('message', res => {
-			console.log(res)
 			if (res.progress) progress(res.progress)
 			else {
 				callback(res.err, res.data)
