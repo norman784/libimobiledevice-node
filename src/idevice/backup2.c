@@ -970,9 +970,9 @@ static int mb2_handle_receive_files(FILE *stream_error, FILE *stream_out, node_p
             if (bdone == blocksize) {
                 backup_real_size += blocksize;
             }
-            if (backup_total_size > 0) {
-                print_progress(progress_callback, backup_real_size, backup_total_size);
-            }
+            // if (backup_total_size > 0) {
+            //     print_progress(progress_callback, backup_real_size, backup_total_size);
+            // }
             if (quit_flag)
                 break;
             nlen = 0;
