@@ -71,6 +71,7 @@ if [ ! -f $libusbmuxd_check_file ]; then
 	git clone $libusbmuxd_url
 	# compile it
 	cd $libusbmuxd_dir
+	export PKG_CONFIG_PATH=$install_dir/lib/pkgconfig
 	# for some reason the first time it set the libtool folter to ../.. instead of .
 	# so running a second time the issue its fixed
 	./autogen.sh
