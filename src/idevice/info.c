@@ -66,10 +66,6 @@ void idevice_info(struct idevice_info_options options, FILE *stream_err, FILE *s
     
     if (options.debug) idevice_set_debug_level(1);
     if (options.domain) {
-        if (!is_domain_known(options.domain)) {
-            fprintf(stream_err, "WARNING: Sending query with unknown domain \"%s\".\n", options.domain);
-            return;
-        }
         domain = options.domain;
     }
     if (options.key) key = options.key;
