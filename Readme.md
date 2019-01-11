@@ -4,9 +4,22 @@ The main focus of the library is with electron apps. More info in their official
 
 ## Installation
 
+### Mac
+
 ```bash
 $ yarn add libimobiledevice
 ```
+
+### Windows
+
+#### Requeriments
+
+For using libimobiledevice-node on windows the following requeriments are needed:
+
+- Install **Visual Studio 2017 community**.
+- Install **Windows SDK 8.1**.
+- Be sure **Powershell** command can be called from the command line.
+- Add **msbuild.exe** on windows **PATH**.
 
 ## Todo
 
@@ -25,7 +38,7 @@ Binaries ported
 - [x] ideviceinfo
 - [ ] idevicename
 - [ ] idevicenotificationproxy
-- [ ] idevicepair
+- [x] idevicepair
 - [ ] ideviceprovision
 - [ ] idevicescreenshot
 - [ ] idevicesyslog
@@ -80,3 +93,4 @@ lib.backup2({
     backup_directory: 'backup path'
 }, (err, data) => console.log(err, data), progress => console.log(progress))
 ```
+

@@ -9,13 +9,13 @@ export openssl_url="https://www.openssl.org/source/openssl-1.0.2l.tar.gz"
 export openssl_file="openssl-1.0.2l.tar.gz"
 export openssl_dir="openssl-1.0.2l"
 export openssl_check_file="${install_dir}/include/openssl/opensslv.h"
-export libplist_url="https://github.com/libimobiledevice/libplist.git"
+export libplist_url="https://github.com/libimobiledevice-win32/libplist.git"
 export libplist_dir="libplist"
 export libplist_check_file="${install_dir}/lib/libplist.la"
-export libusbmuxd_url="https://github.com/libimobiledevice/libusbmuxd.git"
+export libusbmuxd_url="https://github.com/libimobiledevice-win32/libusbmuxd.git"
 export libusbmuxd_dir="libusbmuxd"
 export libusbmuxd_check_file="${install_dir}/lib/libusbmuxd.la"
-export libimobiledevice_url="https://github.com/libimobiledevice/libimobiledevice.git"
+export libimobiledevice_url="https://github.com/libimobiledevice-win32/libimobiledevice.git"
 export libimobiledevice_dir="libimobiledevice"
 export libimobiledevice_check_file="${install_dir}/lib/libimobiledevice.la"
 
@@ -23,7 +23,7 @@ mkdir $tmp_dir
 cd $tmp_path
 
 ## openssl
-# if is not installed, install it
+#if is not installed, install it
 if [ ! -f $openssl_check_file ]; then
 	echo "\n\n"
 	echo "Install openssl"
@@ -33,7 +33,15 @@ if [ ! -f $openssl_check_file ]; then
 	tar xvzf $openssl_file
 	# compile it
 	cd $openssl_dir
-	./Configure --prefix=$install_dir --openssldir=$install_dir/openssl darwin64-x86_64-cc
+	if [ "$(uname -s)" == "Darwin" ]; then
+		echo "\n\n ------- Compiling Openssl with Darwin ------- \n\n"
+		./Configure --prefix=$install_dir --openssldir=$install_dir/openssl darwin64-x86_64-cc
+	elif [[ "$(uname -s)" == *"CYGWIN"* ]]; then
+		dos2unix ./*
+		./Configure --prefix=$install_dir --openssldir=$install_dir/openssl Cygwin-x86_64
+	else
+		echo "\n\n ------- No suitable compiler has been found  ------- \n\n"
+	fi
 	make
 	make install_sw
 fi
@@ -49,8 +57,12 @@ if [ ! -f $libplist_check_file ]; then
 	git clone $libplist_url
 	# compile it
 	cd $libplist_dir
+	git checkout v1.2.76
 	# for some reason the first time it set the libtool folter to ../.. instead of .
 	# so running a second time the issue its fixed
+	if [[ "$(uname -s)" == *"CYGWIN"* ]]; then
+		dos2unix ./*
+	fi
 	./autogen.sh
 	./autogen.sh
 	./configure --prefix=$install_dir
@@ -71,9 +83,13 @@ if [ ! -f $libusbmuxd_check_file ]; then
 	git clone $libusbmuxd_url
 	# compile it
 	cd $libusbmuxd_dir
+	git checkout v1.2.76
 	export PKG_CONFIG_PATH=$install_dir/lib/pkgconfig
 	# for some reason the first time it set the libtool folter to ../.. instead of .
 	# so running a second time the issue its fixed
+	if [[ "$(uname -s)" == *"CYGWIN"* ]]; then
+		dos2unix ./*
+	fi
 	./autogen.sh
 	./autogen.sh
 	./configure --prefix=$install_dir
@@ -94,11 +110,15 @@ if [ ! -f $libimobiledevice_check_file ]; then
 	git clone $libimobiledevice_url
 	# compile it
 	cd $libimobiledevice_dir
+	git checkout v1.2.76
 	export PKG_CONFIG_PATH=$install_dir/lib/pkgconfig
 	export LD_LIBRARY_PATH=$install_dir/lib:$LD_LIBRARY_PATH
 	export CPATH=$install_dir/include/openssl:$CPATH
 	# for some reason the first time it set the libtool folter to ../.. instead of .
 	# so running a second time the issue its fixed
+	if [[ "$(uname -s)" == *"CYGWIN"* ]]; then
+		dos2unix ./*
+	fi
 	./autogen.sh
 	./autogen.sh
 	./configure --prefix=$install_dir
@@ -114,13 +134,15 @@ rm -rf $tmp_dir
 # remove binaries, we don't need them
 rm -rf $install_dir/bin
 
-echo ""
-echo "Change absolute path to relative path"
-echo "-------------------------------------------"
+if [ "$(uname -s)" == "Darwin" ]; then
+	echo ""
+	echo "Change absolute path to relative path"
+	echo "-------------------------------------------"
 
-echo "[✔] libimobiledevice.6.dylib"
-install_name_tool -change $install_dir/lib/libusbmuxd.4.dylib @loader_path/libusbmuxd.4.dylib $install_dir/lib/libimobiledevice.6.dylib
-install_name_tool -change $install_dir/lib/libplist.3.dylib @loader_path/libplist.3.dylib $install_dir/lib/libimobiledevice.6.dylib
+	echo "[✔] libimobiledevice.6.dylib"
+	install_name_tool -change $install_dir/lib/libusbmuxd.4.dylib @loader_path/libusbmuxd.4.dylib $install_dir/lib/libimobiledevice.6.dylib
+	install_name_tool -change $install_dir/lib/libplist.3.dylib @loader_path/libplist.3.dylib $install_dir/lib/libimobiledevice.6.dylib
 
-echo "[✔] libusbmuxd.4.dylib"
-install_name_tool -change $install_dir/lib/libplist.3.dylib @loader_path/libplist.3.dylib $install_dir/lib/libusbmuxd.4.dylib
+	echo "[✔] libusbmuxd.4.dylib"
+	install_name_tool -change $install_dir/lib/libplist.3.dylib @loader_path/libplist.3.dylib $install_dir/lib/libusbmuxd.4.dylib
+fi

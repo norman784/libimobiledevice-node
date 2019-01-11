@@ -2,6 +2,7 @@ extern "C" {
     #include <idevice/id.h>
     #include <idevice/info.h>
     #include <idevice/backup2.h>
+    #include <idevice/pair.h>
 }
 
 #include <node.h>
@@ -185,6 +186,25 @@ namespace idevice_info_node {
         callback->Call(Null(isolate), 2, res);
     }
 
+    void pair(const FunctionCallbackInfo<Value>& args) {
+        Isolate* isolate = args.GetIsolate();
+        
+        Local<Function> callback = Local<Function>::Cast(args[1]);
+        Handle<Value> command = Handle<Value>::Cast(args[0]);
+        
+        FILE *err = tmpfile();
+        FILE *data = tmpfile();
+        
+        char* cmd = ToCString(command);
+        idevice_pair(cmd, err, data);
+        
+        Handle<Value> res[2];
+        res[0] = String::NewFromUtf8(isolate, read_stream(err));
+        res[1] = String::NewFromUtf8(isolate, read_stream(data));
+        
+        callback->Call(Null(isolate), 2, res);
+    }
+
     void id(const FunctionCallbackInfo<Value>& args) {
         Isolate* isolate = args.GetIsolate();
         Local<Function> callback = Local<Function>::Cast(args[0]);
@@ -203,6 +223,7 @@ void Initialize(Local<Object> exports) {
     NODE_SET_METHOD(exports, "idevice_backup2", idevice_info_node::backup2);
     NODE_SET_METHOD(exports, "idevice_info", idevice_info_node::info);
     NODE_SET_METHOD(exports, "idevice_id", idevice_info_node::id);
+    NODE_SET_METHOD(exports, "idevice_pair", idevice_info_node::pair);
 }
 
 NODE_MODULE(binding, Initialize);
