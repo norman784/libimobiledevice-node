@@ -72,3 +72,13 @@ exports.info = function(options, callback) {
 
 	return null
 }
+
+exports.pair = function(command, callback) {
+	const child = cp.fork(`${__dirname}/lib/pair_worker`)
+	child.send(command)
+	child.on('message', res => {
+		callback(res.err, res.data)
+		child.disconnect()
+	})
+	return child
+}

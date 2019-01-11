@@ -12,6 +12,7 @@ static const char *domains[] = {
     "com.apple.mobile.battery",
     /* FIXME: For some reason lockdownd segfaults on this, works sometimes though
      "com.apple.mobile.debug",. */
+    "com.apple.fmip",
     "com.apple.iqagent",
     "com.apple.purplebuddy",
     "com.apple.PurpleBuddy",

@@ -9,9 +9,17 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <signal.h>
-#include <unistd.h>
-#include <dirent.h>
-#include <libgen.h>
+
+#ifdef WIN32
+    #define STDIN_FILENO 0
+    #include "common/dirent.h"
+    //#include "common/libgen.h"
+#else
+    #include <unistd.h>
+    #include <dirent.h>
+    #include <libgen.h>
+#endif 
+    
 #include <ctype.h>
 #include <time.h>
 
@@ -30,13 +38,14 @@
 #define LOCK_WAIT 200000
 
 #ifdef WIN32
-#include <windows.h>
-#include <conio.h>
-#define sleep(x) Sleep(x*1000)
+    #include <windows.h>
+    #include <conio.h>
+    #define sleep(x) Sleep(x*1000)
 #else
-#include <termios.h>
-#include <sys/statvfs.h>
+    #include <termios.h>
+    #include <sys/statvfs.h>
 #endif
+
 #include <sys/stat.h>
 
 #define CODE_SUCCESS 0x00
@@ -162,7 +171,7 @@ static int mkdir_with_parents(const char *dir, int mode)
     }
     int res;
     char *parent = strdup(dir);
-    char *parentdir = dirname(parent);
+    char *parentdir = "";//dirname(parent);
     if (parentdir) {
         res = mkdir_with_parents(parentdir, mode);
     } else {
@@ -1614,7 +1623,7 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
                     do_post_notification(device, NP_SYNC_DID_START);
                     break;
                 } else if (aerr == AFC_E_OP_WOULD_BLOCK) {
-                    usleep(LOCK_WAIT);
+                    //usleep(LOCK_WAIT);
                     continue;
                 } else {
                     fprintf(stderr, "ERROR: could not lock file! error code: %d\n", aerr);

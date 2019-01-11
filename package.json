@@ -7,13 +7,18 @@
   "author": "Norman Paniagua (https://github.com/norman784)",
   "license": "MIT",
   "dependencies": {
-    "node-gyp": "^3.6.2"
+    "node-gyp": "^3.6.2",
+    "shelljs": "^0.8.3"
   },
   "scripts": {
-    "preinstall": "sh install.sh",
-    "install": "node-gyp rebuild && sh postinstall.sh",
-    "test": "echo 'Not implemented yet'",
+    "preinstall": "node preinstall.js",
+    "install": "node install.js",
+    "preinstall-win": "preinstall.cmd",
+    "install-win": "install.cmd && node-gyp rebuild && postinstall.cmd",
+    "test": "node test/test_imobiledevice_call.js",
     "compile": "node-gyp rebuild && sh postinstall.sh",
+    "compile-win": "node-gyp rebuild && postinstall.cmd",
+    "build": "node-gyp build",
     "xcode": "node-gyp configure -- -f xcode"
   }
 }
