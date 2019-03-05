@@ -9,6 +9,8 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <signal.h>
+#include <math.h>
+#include <float.h>
 
 #ifdef WIN32
     #define STDIN_FILENO 0
@@ -583,6 +585,7 @@ static void print_progress(node_progress_callback callback, uint64_t current, ui
 }
 
 static double overall_progress = 0;
+static double previous_overall_progress = 0;
 
 static void mb2_set_overall_progress(double progress)
 {
@@ -1282,6 +1285,30 @@ static void clean_exit(int sig)
 {
     fprintf(stderr, "Exiting...\n");
     quit_flag++;
+}
+
+static double minimum_d (double a, double b) {
+     if (a < b) {
+          return a;
+    } else {
+         return b; 
+    }
+}
+
+static bool nearly_equal(double a, double b, double epsilon) {
+    double abs_a = fabs(a);
+    double abs_b = fabs(b);
+    double diff = fabs(a - b);
+    if (a == b) { // shortcut, handles infinities
+		return true;
+    } else if(a == 0 || b == 0 || diff < DBL_MIN){
+        // a or b is zero or both are extremely close to it
+        // relative error is less meaningful here
+        return diff < (epsilon * DBL_MIN);
+    } else {
+        // compute relative 0
+        return diff / minimum_d(abs_a + abs_b, DBL_MAX) < epsilon;
+    }
 }
 
 void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, FILE *stream_out, node_progress_callback progress_callback)
@@ -2146,13 +2173,14 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
                 }
                 
                 /* print status */
-                if ((overall_progress > 0) && !progress_finished) {
+                if ((overall_progress > 0) && !progress_finished && !nearly_equal(previous_overall_progress, overall_progress, 0.0001f)) {
                     if (overall_progress >= 100.0f) {
                         progress_finished = 1;
                     }
                     FILE *stream_progress = tmpfile();
                     print_progress_real(stream_progress, overall_progress, 0);
                     fprintf(stream_progress, " Finished\n");
+                    previous_overall_progress = overall_progress;
                     progress_callback(stream_progress);
                 }
                 
