@@ -1,6 +1,6 @@
 {
   "name": "libimobiledevice",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "description": "A cross-platform software protocol library and tools to communicate with iOS® devices natively.",
   "main": "lib/libimobiledevice.js",
   "repository": "https://github.com/norman784/libimobiledevice-node",
