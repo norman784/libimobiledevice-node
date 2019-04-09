@@ -21,10 +21,6 @@ For using libimobiledevice-node on windows the following requeriments are needed
 - Be sure **Powershell** command can be called from the command line.
 - Add **msbuild.exe** on windows **PATH**.
 
-```bash
-$ yarn add libimobiledevice
-```
-
 ## Todo
 
 Binaries ported
