@@ -15,7 +15,7 @@
     "install": "node install.js",
     "preinstall-win": "preinstall.cmd",
     "install-win": "install.cmd && node-gyp rebuild && postinstall.cmd",
-    "test": "node test/test_imobiledevice_call.js",
+    "tests": "node test/test_imobiledevice_call.js",
     "compile": "node-gyp rebuild && sh postinstall.sh",
     "compile-win": "node-gyp rebuild && postinstall.cmd",
     "build": "node-gyp build",
