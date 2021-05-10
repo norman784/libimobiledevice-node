@@ -1,5 +1,7 @@
 ## Node native add-on for libimobiledevice
 
+![Main workflow](https://github.com/norman784/libimobiledevice-node/actions/workflows/main.yml/badge.svg)
+
 The main focus of the library is with electron apps. More info in their official site [libimobiledevice.org](http://libimobiledevice.org)
 
 ## Installation
