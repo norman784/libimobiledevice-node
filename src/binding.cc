@@ -13,24 +13,23 @@ namespace idevice_info_node {
     Isolate *_isolate;
     Local<Function> _progressCallback;
     
-    char *ToCString(const Handle<Value>& value) {
+    char *ToCString(Isolate* isolate, const Local<Value>& value) {
         if (!value->IsString()) return NULL;
-        String::Utf8Value string(value);
+        String::Utf8Value string(isolate, value);
         char *str = (char *) malloc(string.length() - 1);
         strcpy(str, *string);
         return str;
     }
     
     void progressCallback(FILE *stream_progress) {
-        Handle<Value> res[2];
-        res[0] = String::NewFromUtf8(_isolate, read_stream(stream_progress));
-        _progressCallback->Call(Null(_isolate), 1, res);
+        const unsigned argc = 1;
+        Local<Value> argv[argc] = { String::NewFromUtf8(_isolate, read_stream(stream_progress)).ToLocalChecked() };
+        _progressCallback->Call(_isolate->GetCurrentContext(), Null(_isolate), argc, argv).ToLocalChecked();
     }
     
     void backup2(const FunctionCallbackInfo<Value>& args) {
         _isolate = args.GetIsolate();
-        Local<Function> callback;
-        Handle<Object> object;
+        Local<Context> context = _isolate->GetCurrentContext();  
         
         if (args.Length() < 3) {
             fprintf(stderr, "No arguments provided, this method requires 3 parameters.\n");
@@ -47,39 +46,38 @@ namespace idevice_info_node {
             return;
         }
         
-        object = Handle<Object>::Cast(args[0]);
-        callback = Local<Function>::Cast(args[1]);
+        Local<Object> object = Local<Object>::Cast(args[0]);
+        Local<Function> callback = Local<Function>::Cast(args[1]);
         
         if (!args[2]->IsFunction()) {
-            Handle<Value> res[2];
-            res[0] = String::NewFromUtf8(_isolate, "Third argument must be a function");
-            res[1] = String::NewFromUtf8(_isolate, NULL);
-            callback->Call(Null(_isolate), 2, res);
+            const unsigned argc = 2;
+            Local<Value> argv[argc] = {String::NewFromUtf8(_isolate, "Third argument must be a function").ToLocalChecked(), String::NewFromUtf8(_isolate, NULL).ToLocalChecked() };
+            callback->Call(context, Null(_isolate), argc, argv).ToLocalChecked();
             return;
         }
         
         _progressCallback = Local<Function>::Cast(args[2]);
         
-        Handle<Value> debug = object->Get(String::NewFromUtf8(_isolate, "debug"));
-        Handle<Value> udid = object->Get(String::NewFromUtf8(_isolate, "udid"));
-        Handle<Value> source = object->Get(String::NewFromUtf8(_isolate, "source"));
-        Handle<Value> backup = object->Get(String::NewFromUtf8(_isolate, "backup"));
-        Handle<Value> restore = object->Get(String::NewFromUtf8(_isolate, "restore"));
-        Handle<Value> system = object->Get(String::NewFromUtf8(_isolate, "system"));
-        Handle<Value> reboot = object->Get(String::NewFromUtf8(_isolate, "reboot"));
-        Handle<Value> copy = object->Get(String::NewFromUtf8(_isolate, "copy"));
-        Handle<Value> settings = object->Get(String::NewFromUtf8(_isolate, "settings"));
-        Handle<Value> remove = object->Get(String::NewFromUtf8(_isolate, "remove"));
-        Handle<Value> password = object->Get(String::NewFromUtf8(_isolate, "password"));
-        Handle<Value> cloud = object->Get(String::NewFromUtf8(_isolate, "cloud"));
-        Handle<Value> full = object->Get(String::NewFromUtf8(_isolate, "full"));
-        Handle<Value> info = object->Get(String::NewFromUtf8(_isolate, "info"));
-        Handle<Value> list = object->Get(String::NewFromUtf8(_isolate, "list"));
-        Handle<Value> unback = object->Get(String::NewFromUtf8(_isolate, "unback"));
-        Handle<Value> encryption = object->Get(String::NewFromUtf8(_isolate, "encryption"));
-        Handle<Value> interactive = object->Get(String::NewFromUtf8(_isolate, "interactive"));
-        Handle<Value> changepw = object->Get(String::NewFromUtf8(_isolate, "changepw"));
-        Handle<Value> backup_directory = object->Get(String::NewFromUtf8(_isolate, "backup_directory"));
+        Local<Value> debug = object->Get(context, String::NewFromUtf8(_isolate, "debug").ToLocalChecked()).ToLocalChecked();
+        Local<Value> udid = object->Get(context, String::NewFromUtf8(_isolate, "udid").ToLocalChecked()).ToLocalChecked();
+        Local<Value> source = object->Get(context, String::NewFromUtf8(_isolate, "source").ToLocalChecked()).ToLocalChecked();
+        Local<Value> backup = object->Get(context, String::NewFromUtf8(_isolate, "backup").ToLocalChecked()).ToLocalChecked();
+        Local<Value> restore = object->Get(context, String::NewFromUtf8(_isolate, "restore").ToLocalChecked()).ToLocalChecked();
+        Local<Value> system = object->Get(context, String::NewFromUtf8(_isolate, "system").ToLocalChecked()).ToLocalChecked();
+        Local<Value> reboot = object->Get(context, String::NewFromUtf8(_isolate, "reboot").ToLocalChecked()).ToLocalChecked();
+        Local<Value> copy = object->Get(context, String::NewFromUtf8(_isolate, "copy").ToLocalChecked()).ToLocalChecked();
+        Local<Value> settings = object->Get(context, String::NewFromUtf8(_isolate, "settings").ToLocalChecked()).ToLocalChecked();
+        Local<Value> remove = object->Get(context, String::NewFromUtf8(_isolate, "remove").ToLocalChecked()).ToLocalChecked();
+        Local<Value> password = object->Get(context, String::NewFromUtf8(_isolate, "password").ToLocalChecked()).ToLocalChecked();
+        Local<Value> cloud = object->Get(context, String::NewFromUtf8(_isolate, "cloud").ToLocalChecked()).ToLocalChecked();
+        Local<Value> full = object->Get(context, String::NewFromUtf8(_isolate, "full").ToLocalChecked()).ToLocalChecked();
+        Local<Value> info = object->Get(context, String::NewFromUtf8(_isolate, "info").ToLocalChecked()).ToLocalChecked();
+        Local<Value> list = object->Get(context, String::NewFromUtf8(_isolate, "list").ToLocalChecked()).ToLocalChecked();
+        Local<Value> unback = object->Get(context, String::NewFromUtf8(_isolate, "unback").ToLocalChecked()).ToLocalChecked();
+        Local<Value> encryption = object->Get(context, String::NewFromUtf8(_isolate, "encryption").ToLocalChecked()).ToLocalChecked();
+        Local<Value> interactive = object->Get(context, String::NewFromUtf8(_isolate, "interactive").ToLocalChecked()).ToLocalChecked();
+        Local<Value> changepw = object->Get(context, String::NewFromUtf8(_isolate, "changepw").ToLocalChecked()).ToLocalChecked();
+        Local<Value> backup_directory = object->Get(context, String::NewFromUtf8(_isolate, "backup_directory").ToLocalChecked()).ToLocalChecked();
         
         idevice_backup2_options options;
         options.debug = false;
@@ -105,61 +103,60 @@ namespace idevice_info_node {
         options.changepw.newpw = NULL;
         options.backup_directory = NULL;
         
-        if (debug->IsBoolean()) { options.debug = debug->BooleanValue(); }
-        if (udid->IsString()) { options.udid = ToCString(udid); }
-        if (source->IsString()) { options.source = ToCString(source); }
-        if (backup->IsBoolean()) { options.backup = backup->BooleanValue(); }
-        if (restore->IsBoolean()) { options.restore = restore->BooleanValue(); }
-        if (system->IsBoolean()) { options.system = system->BooleanValue(); }
-        if (reboot->IsBoolean()) { options.reboot = reboot->BooleanValue(); }
-        if (copy->IsBoolean()) { options.copy = copy->BooleanValue(); }
-        if (settings->IsBoolean()) { options.settings = settings->BooleanValue(); }
-        if (remove->IsBoolean()) { options.remove = remove->BooleanValue(); }
-        if (password->IsString()) { options.password = ToCString(password); }
-        if (cloud->IsString()) { options.cloud = ToCString(cloud); }
-        if (full->IsBoolean()) { options.full = full->BooleanValue(); }
-        if (info->IsBoolean()) { options.info = info->BooleanValue(); }
-        if (list->IsBoolean()) { options.list = list->BooleanValue(); }
-        if (interactive->IsBoolean()) { options.interactive = interactive->BooleanValue(); }
-        if (unback->IsBoolean()) { options.unback = unback->BooleanValue(); }
-        if (backup_directory->IsString()) { options.backup_directory = ToCString(backup_directory); }
+        if (debug->IsBoolean()) { options.debug = debug->BooleanValue(_isolate); }
+        if (udid->IsString()) { options.udid = ToCString(_isolate, udid); }
+        if (source->IsString()) { options.source = ToCString(_isolate, source); }
+        if (backup->IsBoolean()) { options.backup = backup->BooleanValue(_isolate); }
+        if (restore->IsBoolean()) { options.restore = restore->BooleanValue(_isolate); }
+        if (system->IsBoolean()) { options.system = system->BooleanValue(_isolate); }
+        if (reboot->IsBoolean()) { options.reboot = reboot->BooleanValue(_isolate); }
+        if (copy->IsBoolean()) { options.copy = copy->BooleanValue(_isolate); }
+        if (settings->IsBoolean()) { options.settings = settings->BooleanValue(_isolate); }
+        if (remove->IsBoolean()) { options.remove = remove->BooleanValue(_isolate); }
+        if (password->IsString()) { options.password = ToCString(_isolate, password); }
+        if (cloud->IsString()) { options.cloud = ToCString(_isolate, cloud); }
+        if (full->IsBoolean()) { options.full = full->BooleanValue(_isolate); }
+        if (info->IsBoolean()) { options.info = info->BooleanValue(_isolate); }
+        if (list->IsBoolean()) { options.list = list->BooleanValue(_isolate); }
+        if (interactive->IsBoolean()) { options.interactive = interactive->BooleanValue(_isolate); }
+        if (unback->IsBoolean()) { options.unback = unback->BooleanValue(_isolate); }
+        if (backup_directory->IsString()) { options.backup_directory = ToCString(_isolate, backup_directory); }
         if (encryption->IsObject()) {
-            Local<Object> obj = encryption->ToObject();
-            Handle<Value> status = obj->Get(String::NewFromUtf8(_isolate, "status"));
-            Handle<Value> password = obj->Get(String::NewFromUtf8(_isolate, "password"));
-            if (status->IsString()) options.encryption.status = ToCString(status);
-            if (password->IsString()) options.encryption.password = ToCString(password);
+            Local<Object> encryptionObject = encryption->ToObject(context).ToLocalChecked();
+            Local<Value> status = encryptionObject->Get(context, String::NewFromUtf8(_isolate, "status").ToLocalChecked()).ToLocalChecked();
+            Local<Value> password = encryptionObject->Get(context, String::NewFromUtf8(_isolate, "password").ToLocalChecked()).ToLocalChecked();
+            if (status->IsString()) options.encryption.status = ToCString(_isolate, status);
+            if (password->IsString()) options.encryption.password = ToCString(_isolate, password);
         }
         if (changepw->IsObject()) {
-            Local<Object> obj = changepw->ToObject();
-            Handle<Value> newpw = obj->Get(String::NewFromUtf8(_isolate, "newpw"));
-            Handle<Value> backup_password = obj->Get(String::NewFromUtf8(_isolate, "backup_password"));
-            if (newpw->IsString()) options.changepw.newpw = ToCString(newpw);
-            if (backup_password->IsString()) options.changepw.backup_password = ToCString(backup_password);
+            Local<Object> changepwObject = changepw->ToObject(context).ToLocalChecked();
+            Local<Value> newpw = changepwObject->Get(context, String::NewFromUtf8(_isolate, "newpw").ToLocalChecked()).ToLocalChecked();
+            Local<Value> backup_password = changepwObject->Get(context, String::NewFromUtf8(_isolate, "backup_password").ToLocalChecked()).ToLocalChecked();
+            if (newpw->IsString()) options.changepw.newpw = ToCString(_isolate, newpw);
+            if (backup_password->IsString()) options.changepw.backup_password = ToCString(_isolate, backup_password);
         }
         
         FILE *stream_err = tmpfile();
         FILE *stream_out = tmpfile();
         
         idevice_backup2(options, stream_err, stream_out, &progressCallback);
+        const unsigned argc = 2;
+        Local<Value> argv[argc] = { String::NewFromUtf8(_isolate, read_stream(stream_err)).ToLocalChecked(), String::NewFromUtf8(_isolate, read_stream(stream_out)).ToLocalChecked()};
         
-        Handle<Value> res[2];
-        res[0] = String::NewFromUtf8(_isolate, read_stream(stream_err));
-        res[1] = String::NewFromUtf8(_isolate, read_stream(stream_out));
-        
-        callback->Call(Null(_isolate), 2, res);
+        callback->Call(context, Null(_isolate), argc, argv).ToLocalChecked();
     }
     
     void info(const FunctionCallbackInfo<Value>& args) {
         Isolate* isolate = args.GetIsolate();
+        Local<Context> context = isolate->GetCurrentContext();
         
         Local<Function> callback = Local<Function>::Cast(args[1]);
-        Handle<Object> object = Handle<Object>::Cast(args[0]);
-        Handle<Value> debug = object->Get(String::NewFromUtf8(isolate, "debug"));
-        Handle<Value> domain = object->Get(String::NewFromUtf8(isolate, "domain"));
-        Handle<Value> key = object->Get(String::NewFromUtf8(isolate, "key"));
-        Handle<Value> udid = object->Get(String::NewFromUtf8(isolate, "udid"));
-        Handle<Value> simple = object->Get(String::NewFromUtf8(isolate, "simple"));
+        Local<Object> object = Local<Object>::Cast(args[0]);
+        MaybeLocal<Value> maybeDebug = object->Get(context, String::NewFromUtf8(isolate, "debug").ToLocalChecked());
+        MaybeLocal<Value> maybeDomain = object->Get(context, String::NewFromUtf8(isolate, "domain").ToLocalChecked());
+        MaybeLocal<Value> maybeKey = object->Get(context, String::NewFromUtf8(isolate, "key").ToLocalChecked());
+        MaybeLocal<Value> maybeUdid = object->Get(context, String::NewFromUtf8(isolate, "udid").ToLocalChecked());
+        MaybeLocal<Value> maybeSimple = object->Get(context, String::NewFromUtf8(isolate, "simple").ToLocalChecked());
         
         idevice_info_options options;
         options.debug = true;
@@ -167,56 +164,71 @@ namespace idevice_info_node {
         options.domain = NULL;
         options.key = NULL;
         options.udid = NULL;
+
+        if( !maybeDebug.IsEmpty()) { 
+            Local<Value> debug = maybeDebug.ToLocalChecked();
+            if (debug->IsBoolean()) { options.debug = debug->BooleanValue(isolate); }
+        }
+
+        if (!maybeDomain.IsEmpty()) {
+            Local<Value> domain = maybeDomain.ToLocalChecked();
+            if (domain->IsString()) { options.domain = ToCString(isolate, domain); }
+        }
+       
+        if (!maybeKey.IsEmpty()) {
+            Local<Value> key = maybeKey.ToLocalChecked();
+            if (key->IsString()) { options.key = ToCString(isolate, key); }
+        }
+
+        if (!maybeUdid.IsEmpty()) {
+            Local<Value> udid = maybeUdid.ToLocalChecked();
+            if (udid->IsString()) { options.udid = ToCString(isolate, udid); }
+        }
         
-        if (debug->IsBoolean()) { options.debug = debug->BooleanValue(); }
-        if (domain->IsString()) { options.domain = ToCString(domain); }
-        if (key->IsString()) { options.key = ToCString(key); }
-        if (udid->IsString()) { options.udid = ToCString(udid); }
-        if (simple->IsBoolean()) { options.simple = simple->BooleanValue(); }
+        if (!maybeSimple.IsEmpty()) {
+            Local<Value> simple = maybeSimple.ToLocalChecked();
+            if (simple->IsBoolean()) { options.simple = simple->BooleanValue(isolate); }
+        }
         
         FILE *err = tmpfile();
         FILE *data = tmpfile();
         
         idevice_info(options, err, data);
+        const unsigned argc = 2;
+        Local<Value> argv[argc] = { String::NewFromUtf8(isolate, read_stream(err)).ToLocalChecked(), String::NewFromUtf8(isolate, read_stream(data)).ToLocalChecked() };
         
-        Handle<Value> res[2];
-        res[0] = String::NewFromUtf8(isolate, read_stream(err));
-        res[1] = String::NewFromUtf8(isolate, read_stream(data));
-        
-        callback->Call(Null(isolate), 2, res);
+        callback->Call(context, Null(isolate), argc, argv).ToLocalChecked();
     }
 
     void pair(const FunctionCallbackInfo<Value>& args) {
         Isolate* isolate = args.GetIsolate();
-        
+        Local<Context> context = isolate->GetCurrentContext();
         Local<Function> callback = Local<Function>::Cast(args[1]);
-        Handle<Value> command = Handle<Value>::Cast(args[0]);
+        Local<Value> command = Local<Value>::Cast(args[0]);
         
         FILE *err = tmpfile();
         FILE *data = tmpfile();
         
-        char* cmd = ToCString(command);
+        char* cmd = ToCString(isolate, command);
         idevice_pair(cmd, err, data);
         
-        Handle<Value> res[2];
-        res[0] = String::NewFromUtf8(isolate, read_stream(err));
-        res[1] = String::NewFromUtf8(isolate, read_stream(data));
+        const unsigned argc = 2;
+        Local<Value> argv[argc] = { String::NewFromUtf8(isolate, read_stream(err)).ToLocalChecked(), String::NewFromUtf8(isolate, read_stream(data)).ToLocalChecked() };
         
-        callback->Call(Null(isolate), 2, res);
+        callback->Call(context, Null(isolate), argc, argv).ToLocalChecked();
     }
 
     void id(const FunctionCallbackInfo<Value>& args) {
         Isolate* isolate = args.GetIsolate();
+        Local<Context> context = isolate->GetCurrentContext();
         Local<Function> callback = Local<Function>::Cast(args[0]);
-
         FILE *data = tmpfile();
-        
+        const unsigned argc = 1;
         idevice_id(data);
         
-        Handle<Value> res[1];
-        res[0] = String::NewFromUtf8(isolate, read_stream(data));
+        Local<Value> argv[argc] = { String::NewFromUtf8(isolate, read_stream(data)).ToLocalChecked() };
         
-        callback->Call(Null(isolate), 1, res);
+        callback->Call(context, Null(isolate), argc, argv).ToLocalChecked();
     }
 }
 void Initialize(Local<Object> exports) {

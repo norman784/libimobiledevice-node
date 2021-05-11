@@ -99,4 +99,10 @@ lib.backup2({
     backup_directory: 'backup path'
 }, (err, data) => console.log(err, data), progress => console.log(progress))
 ```
+## Check examples
 
+Run any of the examples in the path [examples](./examples):
+
+```bash
+node examples/idevice_id
+```
