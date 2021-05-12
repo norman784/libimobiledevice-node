@@ -35,8 +35,9 @@
                 "dependencies/include"
               ],
               "libraries": [
-                "<(module_root_dir)/dependencies/lib/libplist.3.dylib",
-                "<(module_root_dir)/dependencies/lib/libimobiledevice.6.dylib"
+                "<(module_root_dir)/dependencies/lib/libplist-2.0.3.dylib",
+                "<(module_root_dir)/dependencies/lib/libusbmuxd.6.dylib",
+                "<(module_root_dir)/dependencies/lib/libimobiledevice-1.0.6.dylib"
               ]
             }
           ],
