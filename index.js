@@ -1,4 +1,11 @@
-const cp = require('child_process')
+const cp = require('child_process');
+const {idevice_id, CannotRetrieveDeviceListError, CannotMallocMemoryError, CannotReallocMemoryError } = require('./lib/idevice_id');
+const { UnkownErrror } = require('./lib/errors');
+
+exports.UnkownErrror = UnkownErrror;
+exports.CannotRetrieveDeviceListError = CannotRetrieveDeviceListError;
+exports.CannotMallocMemoryError = CannotMallocMemoryError;
+exports.CannotReallocMemoryError = CannotReallocMemoryError;
 
 exports.backup2 = function(options, callback, progress) {
 	if (typeof options === 'function') {
@@ -33,20 +40,15 @@ exports.backup2 = function(options, callback, progress) {
 	return null
 }
 
-exports.id = function(callback) {
-	if (typeof callback !== 'function') {
-		callback(Error('Callback is not a function'), null)
-	} else {
-		const child = cp.fork(`${__dirname}/lib/id_worker`)
-		child.on('message', data => {
-			callback(data)
-			child.disconnect()
-		})
-		return child
-	}
 
-	return null
-}
+/**
+ *
+ * @param {{debug: boolean, usblist: boolean, networklist: boolean}} [options]
+ * @param {function((UnkownErrror | CannotRetrieveDeviceListError | CannotMallocMemoryError | CannotReallocMemoryError), 
+ * 		   {usblist: [string], networklist: [string]})} callback
+ * 
+ */
+exports.id = (options, callback) => idevice_id(options, callback);
 
 exports.info = function(options, callback) {
 	if (typeof options === "function") {

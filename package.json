@@ -15,10 +15,16 @@
     "install": "node install.js",
     "preinstall-win": "preinstall.cmd",
     "install-win": "install.cmd && node-gyp rebuild && postinstall.cmd",
-    "tests": "node test/test_imobiledevice_call.js",
+    "test": "mocha",
+    "test:native": "node test/test_imobiledevice_call.js",
     "compile": "node-gyp rebuild && sh postinstall.sh",
     "compile-win": "node-gyp rebuild && postinstall.cmd",
     "build": "node-gyp build",
     "xcode": "node-gyp configure -- -f xcode"
+  },
+  "devDependencies": {
+    "chai": "^4.3.4",
+    "mocha": "^8.4.0",
+    "sinon": "^10.0.0"
   }
 }

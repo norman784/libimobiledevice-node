@@ -152,44 +152,25 @@ namespace idevice_info_node {
         
         Local<Function> callback = Local<Function>::Cast(args[1]);
         Local<Object> object = Local<Object>::Cast(args[0]);
-        MaybeLocal<Value> maybeDebug = object->Get(context, String::NewFromUtf8(isolate, "debug").ToLocalChecked());
-        MaybeLocal<Value> maybeDomain = object->Get(context, String::NewFromUtf8(isolate, "domain").ToLocalChecked());
-        MaybeLocal<Value> maybeKey = object->Get(context, String::NewFromUtf8(isolate, "key").ToLocalChecked());
-        MaybeLocal<Value> maybeUdid = object->Get(context, String::NewFromUtf8(isolate, "udid").ToLocalChecked());
-        MaybeLocal<Value> maybeSimple = object->Get(context, String::NewFromUtf8(isolate, "simple").ToLocalChecked());
+        Local<Value> debug = object->Get(context, String::NewFromUtf8(isolate, "debug").ToLocalChecked()).ToLocalChecked();
+        Local<Value> domain = object->Get(context, String::NewFromUtf8(isolate, "domain").ToLocalChecked()).ToLocalChecked();
+        Local<Value> key = object->Get(context, String::NewFromUtf8(isolate, "key").ToLocalChecked()).ToLocalChecked();
+        Local<Value> udid = object->Get(context, String::NewFromUtf8(isolate, "udid").ToLocalChecked()).ToLocalChecked();
+        Local<Value> simple = object->Get(context, String::NewFromUtf8(isolate, "simple").ToLocalChecked()).ToLocalChecked();
         
         idevice_info_options options;
-        options.debug = true;
+        options.debug = false;
         options.simple = false;
         options.domain = NULL;
         options.key = NULL;
         options.udid = NULL;
 
-        if( !maybeDebug.IsEmpty()) { 
-            Local<Value> debug = maybeDebug.ToLocalChecked();
-            if (debug->IsBoolean()) { options.debug = debug->BooleanValue(isolate); }
-        }
+        if (debug->IsBoolean()) { options.debug = debug->BooleanValue(isolate); }
+        if (domain->IsString()) { options.domain = ToCString(isolate, domain); }
+        if (key->IsString()) { options.key = ToCString(isolate, key); }
+        if (udid->IsString()) { options.udid = ToCString(isolate, udid); }
+        if (simple->IsBoolean()) { options.simple = simple->BooleanValue(isolate); }
 
-        if (!maybeDomain.IsEmpty()) {
-            Local<Value> domain = maybeDomain.ToLocalChecked();
-            if (domain->IsString()) { options.domain = ToCString(isolate, domain); }
-        }
-       
-        if (!maybeKey.IsEmpty()) {
-            Local<Value> key = maybeKey.ToLocalChecked();
-            if (key->IsString()) { options.key = ToCString(isolate, key); }
-        }
-
-        if (!maybeUdid.IsEmpty()) {
-            Local<Value> udid = maybeUdid.ToLocalChecked();
-            if (udid->IsString()) { options.udid = ToCString(isolate, udid); }
-        }
-        
-        if (!maybeSimple.IsEmpty()) {
-            Local<Value> simple = maybeSimple.ToLocalChecked();
-            if (simple->IsBoolean()) { options.simple = simple->BooleanValue(isolate); }
-        }
-        
         FILE *err = tmpfile();
         FILE *data = tmpfile();
         
@@ -218,19 +199,54 @@ namespace idevice_info_node {
         callback->Call(context, Null(isolate), argc, argv).ToLocalChecked();
     }
 
+    void pack_devices_ids(Isolate* isolate, Local<Context> &context, Local<Object> &devicesObj, struct idevices_found *idevices) {
+        Local<Array> usblist = Array::New(isolate);
+        Local<Array> networklist = Array::New(isolate);
+        for (int i = 0; i < idevices->usb.num_udids; i++) {
+            usblist->Set(context, i, String::NewFromUtf8(isolate, idevices->usb.udids[i]).ToLocalChecked()).Check();
+        }
+        for (int i = 0; i < idevices->network.num_udids; i++) {
+            networklist->Set(context, i, String::NewFromUtf8(isolate, idevices->network.udids[i]).ToLocalChecked()).Check();
+        }
+
+        devicesObj->Set(context, String::NewFromUtf8(isolate, "usblist").ToLocalChecked(), usblist).Check();
+        devicesObj->Set(context, String::NewFromUtf8(isolate, "networklist").ToLocalChecked(), networklist).Check();
+    }
+
     void id(const FunctionCallbackInfo<Value>& args) {
         Isolate* isolate = args.GetIsolate();
         Local<Context> context = isolate->GetCurrentContext();
-        Local<Function> callback = Local<Function>::Cast(args[0]);
-        FILE *data = tmpfile();
-        const unsigned argc = 1;
-        idevice_id(data);
+        Local<Function> callback = Local<Function>::Cast(args[1]);
+        Local<Object> object = Local<Object>::Cast(args[0]);
+
+        Local<Value> debug = object->Get(context, String::NewFromUtf8(isolate, "debug").ToLocalChecked()).ToLocalChecked();
+        Local<Value> usblist = object->Get(context, String::NewFromUtf8(isolate, "usblist").ToLocalChecked()).ToLocalChecked();
+        Local<Value> networklist = object->Get(context, String::NewFromUtf8(isolate, "networklist").ToLocalChecked()).ToLocalChecked();
+
+        idevice_id_options options;
+        options.debug = false;
+        options.usblist = true;
+        options.networklist = true;
+
+        if (debug->IsBoolean()) { options.debug = debug->BooleanValue(isolate); }
+        if (usblist->IsBoolean()) { options.usblist = usblist->BooleanValue(isolate); }
+        if (networklist->IsBoolean()) { options.networklist = networklist->BooleanValue(isolate); }
+
+        idevices_found idevices = {.usb = default_idevice_udids, .network = default_idevice_udids};
+
+        id_error error = idevice_id(options, &idevices);
+
+        Local<Object> devicesObj = Object::New(isolate);
+        pack_devices_ids(isolate, context, devicesObj, &idevices);
+
+        const unsigned argc = 2;
+        Local<Value> argv[argc] = { Number::New(isolate, error), devicesObj };
         
-        Local<Value> argv[argc] = { String::NewFromUtf8(isolate, read_stream(data)).ToLocalChecked() };
-        
+        idevices_found_free(&idevices);
         callback->Call(context, Null(isolate), argc, argv).ToLocalChecked();
     }
 }
+
 void Initialize(Local<Object> exports) {
     NODE_SET_METHOD(exports, "idevice_backup2", idevice_info_node::backup2);
     NODE_SET_METHOD(exports, "idevice_info", idevice_info_node::info);
