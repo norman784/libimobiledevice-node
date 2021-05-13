@@ -4,6 +4,7 @@
         "string": "cpp",
         "string_view": "cpp",
         "ranges": "cpp",
-        "functional": "cpp"
+        "functional": "cpp",
+        "stdio.h": "c"
     }
 }

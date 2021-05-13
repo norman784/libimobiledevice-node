@@ -2,6 +2,8 @@
 #include <config.h>
 #endif
 
+#define TOOL_NAME "idevicepair"
+
 #include "pair.h"
 
 #include <stdio.h>
@@ -36,7 +38,6 @@ static void print_error_message(lockdownd_error_t err, FILE *stream_err)
 
 int idevice_pair(char *cmd, FILE *stream_err, FILE *stream_out)
 {
-	printf("lets pair %s", cmd);
 	lockdownd_client_t client = NULL;
 	idevice_t device = NULL;
 	idevice_error_t ret = IDEVICE_E_UNKNOWN_ERROR;
@@ -171,7 +172,9 @@ int idevice_pair(char *cmd, FILE *stream_err, FILE *stream_out)
 		break;
 
 		case OP_VALIDATE:
-		lerr = lockdownd_validate_pair(client, NULL);
+		lockdownd_client_free(client);
+		client = NULL;
+		lerr = lockdownd_client_new_with_handshake(device, &client, TOOL_NAME);
 		if (lerr == LOCKDOWN_E_SUCCESS) {
 			fprintf(stream_out, "SUCCESS: Validated pairing with device %s\n", udid);
 		} else {
