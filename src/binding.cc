@@ -145,6 +145,17 @@ namespace idevice_info_node {
         
         callback->Call(context, Null(_isolate), argc, argv).ToLocalChecked();
     }
+
+    void pack_idevice_info_error(Isolate *isolate, Local<Context> &context, Local<Object> &ideviceInfoErrorObj, struct idevice_info_error *error) {
+        ideviceInfoErrorObj->Set(context, String::NewFromUtf8(isolate, "infoError").ToLocalChecked(), Number::New(isolate, error->info_error)).Check();
+        ideviceInfoErrorObj->Set(context, String::NewFromUtf8(isolate, "lockdownError").ToLocalChecked(), Number::New(isolate, error->lockdownd_error)).Check();
+        ideviceInfoErrorObj->Set(context, String::NewFromUtf8(isolate, "ideviceError").ToLocalChecked(), Number::New(isolate, error->idevice_error)).Check();
+        if(error->error_message != NULL) {
+            ideviceInfoErrorObj->Set(context, String::NewFromUtf8(isolate, "errorMessage").ToLocalChecked(), String::NewFromUtf8(isolate, read_stream(error->error_message)).ToLocalChecked()).Check();
+        } else {
+            ideviceInfoErrorObj->Set(context, String::NewFromUtf8(isolate, "errorMessage").ToLocalChecked(), String::NewFromUtf8(isolate, "").ToLocalChecked()).Check();
+        }
+    }
     
     void info(const FunctionCallbackInfo<Value>& args) {
         Isolate* isolate = args.GetIsolate();
@@ -153,10 +164,11 @@ namespace idevice_info_node {
         Local<Function> callback = Local<Function>::Cast(args[1]);
         Local<Object> object = Local<Object>::Cast(args[0]);
         Local<Value> debug = object->Get(context, String::NewFromUtf8(isolate, "debug").ToLocalChecked()).ToLocalChecked();
+        Local<Value> simple = object->Get(context, String::NewFromUtf8(isolate, "simple").ToLocalChecked()).ToLocalChecked();
         Local<Value> domain = object->Get(context, String::NewFromUtf8(isolate, "domain").ToLocalChecked()).ToLocalChecked();
         Local<Value> key = object->Get(context, String::NewFromUtf8(isolate, "key").ToLocalChecked()).ToLocalChecked();
         Local<Value> udid = object->Get(context, String::NewFromUtf8(isolate, "udid").ToLocalChecked()).ToLocalChecked();
-        Local<Value> simple = object->Get(context, String::NewFromUtf8(isolate, "simple").ToLocalChecked()).ToLocalChecked();
+        Local<Value> network = object->Get(context, String::NewFromUtf8(isolate, "network").ToLocalChecked()).ToLocalChecked();
         
         idevice_info_options options;
         options.debug = false;
@@ -164,19 +176,25 @@ namespace idevice_info_node {
         options.domain = NULL;
         options.key = NULL;
         options.udid = NULL;
+        options.network = false;
 
         if (debug->IsBoolean()) { options.debug = debug->BooleanValue(isolate); }
+        if (simple->IsBoolean()) { options.simple = simple->BooleanValue(isolate); }
         if (domain->IsString()) { options.domain = ToCString(isolate, domain); }
         if (key->IsString()) { options.key = ToCString(isolate, key); }
         if (udid->IsString()) { options.udid = ToCString(isolate, udid); }
-        if (simple->IsBoolean()) { options.simple = simple->BooleanValue(isolate); }
+        if (network->IsBoolean()) { options.network = network->BooleanValue(isolate); }
 
-        FILE *err = tmpfile();
+        idevice_info_error error = default_idevice_info_error;
+        error.error_message = tmpfile();
         FILE *data = tmpfile();
         
-        idevice_info(options, err, data);
+        idevice_info(options, &error, data);
+
+        Local<Object> ideviceInfoError = Object::New(isolate);
+        pack_idevice_info_error(isolate, context, ideviceInfoError, &error);
         const unsigned argc = 2;
-        Local<Value> argv[argc] = { String::NewFromUtf8(isolate, read_stream(err)).ToLocalChecked(), String::NewFromUtf8(isolate, read_stream(data)).ToLocalChecked() };
+        Local<Value> argv[argc] = { ideviceInfoError, String::NewFromUtf8(isolate, read_stream(data)).ToLocalChecked() };
         
         callback->Call(context, Null(isolate), argc, argv).ToLocalChecked();
     }

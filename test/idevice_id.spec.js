@@ -1,44 +1,26 @@
 
 const { id } = require('../index');
 const cp = require('child_process');
-let assert = require('assert');
 const { expect } = require('chai');
 const { 
     UnkownErrror,
     CannotRetrieveDeviceListError,
     CannotMallocMemoryError,
     CannotReallocMemoryError } = require('../index');
-const { stub } = require('sinon');
 const { native_id_errors } = require('../lib/idevice_id');
+const { initSpies, initStubs, stubChildOn } = require('./helpers');
 
 
 describe('Test idevice_id', () => {
-    
-    const stubChildOn = (error, devicelist) =>  (text, callback) => callback({error: error, data: devicelist});
+
     const stubDeviceList = {usblist: ['abcdef1234566'], networklist: ['1234566abcdef']};
 
     let stubs = {};
     let spies = {};
-    const initStubs = () => {  
-        stubs = {
-            fork: cp.fork = stub(),
-            send: stub(),
-            disconnect: stub()
-        }
-    }
-
-    const initSpies = () => {
-        spies = {
-        child: {
-            fork: stubs.fork,
-            send: stubs.send,
-            disconnect: stubs.disconnect
-        }}
-    }
   
     beforeEach(() => {
-        initStubs();
-        initSpies();
+        stubs = initStubs(cp);
+        spies = initSpies(stubs);
     });
 
     it('id retrieve the list successfully', () => {

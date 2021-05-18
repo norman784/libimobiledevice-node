@@ -58,6 +58,7 @@
         "streambuf": "c",
         "cinttypes": "c",
         "cstdbool": "c",
-        "typeinfo": "c"
+        "typeinfo": "c",
+        "common_binding.h": "c"
     }
 }
