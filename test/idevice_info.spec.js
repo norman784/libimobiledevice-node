@@ -27,7 +27,6 @@ const batteryPlist = `<?xml version="1.0" encoding="UTF-8"?>
 </plist>
 `
 
-
 describe('idevice_info tests', () => {
     const expectedBatteryInfo = {
         BatteryCurrentCapacity: 55,

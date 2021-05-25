@@ -1,17 +1,28 @@
 const cp = require('child_process');
 const { idevice_id, CannotRetrieveDeviceListError, CannotMallocMemoryError, CannotReallocMemoryError } = require('./lib/idevice_id');
 const { idevice_info, InfoInvalidDomainError, InfoUnkownError } = require('./lib/idevice_info');
-const { UnkownErrror, LockdownError, IdeviceNoDeviceFoundError } = require('./lib/errors');
+const { UnkownErrror, IdeviceNoDeviceFoundError, LockdownPasswordProtectedError, LockdownInvalidHostIdError, LockdownPairingDialongResponsoPendingError, LockdownUserDeniedPairingError, LockdownError } = require('./lib/errors');
+const { PairInvalidCommandError, PairUnkownError, idevice_pair, getPairParameters } = require('./lib/idevice_pair');
 
 // Export errors
 exports.UnkownErrror = UnkownErrror;
 exports.CannotRetrieveDeviceListError = CannotRetrieveDeviceListError;
 exports.CannotMallocMemoryError = CannotMallocMemoryError;
 exports.CannotReallocMemoryError = CannotReallocMemoryError;
+// Info errors
 exports.InfoInvalidDomainError = InfoInvalidDomainError;
 exports.InfoUnkownError = InfoUnkownError;
-exports.LockdownError = LockdownError;
+// Idevice errors
 exports.IdeviceNoDeviceFoundError = IdeviceNoDeviceFoundError;
+// Lockdown errors
+exports.LockdownPasswordProtectedError = LockdownPasswordProtectedError;
+exports.LockdownInvalidHostIdError = LockdownInvalidHostIdError;
+exports.LockdownPairingDialongResponsoPendingError = LockdownPairingDialongResponsoPendingError;
+exports.LockdownUserDeniedPairingError = LockdownUserDeniedPairingError;
+exports.LockdownError = LockdownError;
+// Pair errors
+exports.PairInvalidCommandError = PairInvalidCommandError;
+exports.PairUnkownError = PairUnkownError;
 
 exports.backup2 = function(options, callback, progress) {
 	if (typeof options === 'function') {
@@ -63,12 +74,60 @@ exports.id = (options, callback) => idevice_id(options, callback);
  */
 exports.info = (options, callback) => idevice_info(options, callback);
 
-exports.pair = function(command, callback) {
-	const child = cp.fork(`${__dirname}/lib/pair_worker`)
-	child.send(command)
-	child.on('message', res => {
-		callback(res.err, res.data)
-		child.disconnect()
-	})
-	return child
+exports.pair = {
+	/**
+	 * pair –will try to pair to the device, if it has success then will return the udid.
+	 * @param {{debug: boolean, udid: string}} [options]
+	 * @param {(error: (PairInvalidCommandError | IdeviceNoDeviceFoundError | LockdownPasswordProtectedError | LockdownInvalidHostIdError | LockdownPairingDialongResponsoPendingError | LockdownUserDeniedPairingError | LockdownError | PairUnkownError), udid: string)} callback 
+	 */
+	pair: (options, callback) => { 
+		const {pOptions, pCallback} = getPairParameters('pair', options, callback);
+		idevice_pair(pOptions, pCallback);
+	},
+	/**
+	 * validate –will try to validate if the device is paired with the computer, if it is, then will return the device udid.
+	 * @param {{debug: boolean, udid: string}} [options]
+	 * @param {(error: (PairInvalidCommandError | IdeviceNoDeviceFoundError | LockdownPasswordProtectedError | LockdownInvalidHostIdError | LockdownPairingDialongResponsoPendingError | LockdownUserDeniedPairingError | LockdownError | PairUnkownError), udid: string)} callback 
+	 */
+	validate: (options, callback) => { 
+		const {pOptions, pCallback} = getPairParameters('validate', options, callback);
+		idevice_pair(pOptions, pCallback);
+	},
+	/**
+	 * unpair –will try to unpair the device, if it success, then will return the device udid.
+	 * @param {{debug: boolean, udid: string}} [options]
+	 * @param {(error: (PairInvalidCommandError | IdeviceNoDeviceFoundError | LockdownInvalidHostIdError | LockdownError | PairUnkownError), udid: string)} callback 
+	 */
+	unpair: (options, callback) => { 
+		const {pOptions, pCallback} = getPairParameters('unpair', options, callback);
+		idevice_pair(pOptions, pCallback);
+	},
+	/**
+	 * list –will try to list all the devices paired with the computer.
+	 * Note: This command seems to be broken in libimobiledevice.
+	 * @param {{debug: boolean, udid: string}} [options]
+	 * @param {(error: (PairInvalidCommandError | LockdownError | PairUnkownError), udids: string)} callback 
+	 */
+	list: (options, callback) => {
+		const {pOptions, pCallback} = getPairParameters('list', options, callback);
+		idevice_pair(pOptions, pCallback);
+	},
+	/**
+	 * systembuid –returns the system buid of the usbmuxd host.
+	 * @param {{debug: boolean, udid: string}} [options]
+	 * @param {(error: (PairInvalidCommandError | LockdownError | PairUnkownError), systembuid: string)} callback 
+	 */
+	systembuid: (options, callback) => {
+		const {pOptions, pCallback} = getPairParameters('systembuid', options, callback);
+		idevice_pair(pOptions, pCallback); 
+	},
+	/**
+	 * systembuid –returns the system buid of the usbmuxd host.
+	 * @param {{debug: boolean, udid: string}} [options]
+	 * @param {(error: (PairInvalidCommandError | LockdownError | PairUnkownError), hostid: string)} callback 
+	 */
+	hostid: (options, callback) => {
+		const {pOptions, pCallback} = getPairParameters('hostid', options, callback);
+		idevice_pair(pOptions, pCallback);
+	}
 }

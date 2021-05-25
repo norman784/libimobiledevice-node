@@ -199,20 +199,48 @@ namespace idevice_info_node {
         callback->Call(context, Null(isolate), argc, argv).ToLocalChecked();
     }
 
+    void pack_idevice_pair_error(Isolate *isolate, Local<Context> &context, Local<Object> &idevicePairErrorObj, struct idevice_pair_error *error) {
+        idevicePairErrorObj->Set(context, String::NewFromUtf8(isolate, "pairError").ToLocalChecked(), Number::New(isolate, error->pair_error)).Check();
+        idevicePairErrorObj->Set(context, String::NewFromUtf8(isolate, "lockdownError").ToLocalChecked(), Number::New(isolate, error->lockdownd_error)).Check();
+        idevicePairErrorObj->Set(context, String::NewFromUtf8(isolate, "ideviceError").ToLocalChecked(), Number::New(isolate, error->idevice_error)).Check();
+        if(error->error_message != NULL) {
+            idevicePairErrorObj->Set(context, String::NewFromUtf8(isolate, "errorMessage").ToLocalChecked(), String::NewFromUtf8(isolate, read_stream(error->error_message)).ToLocalChecked()).Check();
+        } else {
+            idevicePairErrorObj->Set(context, String::NewFromUtf8(isolate, "errorMessage").ToLocalChecked(), String::NewFromUtf8(isolate, "").ToLocalChecked()).Check();
+        }
+        if(error->udid) {
+            idevicePairErrorObj->Set(context, String::NewFromUtf8(isolate, "udid").ToLocalChecked(), String::NewFromUtf8(isolate, read_stream(error->udid)).ToLocalChecked()).Check();
+        } else {
+            idevicePairErrorObj->Set(context, String::NewFromUtf8(isolate, "udid").ToLocalChecked(), String::NewFromUtf8(isolate, "").ToLocalChecked()).Check();
+        }
+    }
+
     void pair(const FunctionCallbackInfo<Value>& args) {
         Isolate* isolate = args.GetIsolate();
         Local<Context> context = isolate->GetCurrentContext();
         Local<Function> callback = Local<Function>::Cast(args[1]);
-        Local<Value> command = Local<Value>::Cast(args[0]);
-        
-        FILE *err = tmpfile();
+        Local<Object> object = Local<Object>::Cast(args[0]);
+
+        Local<Value> debug = object->Get(context, String::NewFromUtf8(isolate, "debug").ToLocalChecked()).ToLocalChecked();
+        Local<Value> udid = object->Get(context, String::NewFromUtf8(isolate, "udid").ToLocalChecked()).ToLocalChecked();
+        Local<Value> command = object->Get(context, String::NewFromUtf8(isolate, "command").ToLocalChecked()).ToLocalChecked();
+
+        idevice_pair_options options = default_idevice_pair_options;
+        if (debug->IsBoolean()) { options.debug = debug->BooleanValue(isolate); }
+        if (udid->IsString()) { options.udid = ToCString(isolate, udid); }
+        if (command->IsString()) { options.command = ToCString(isolate, command); }
+
+        idevice_pair_error error = default_idevice_pair_error;
+        error.udid = tmpfile();
+        error.error_message = tmpfile();
         FILE *data = tmpfile();
-        
-        char* cmd = ToCString(isolate, command);
-        idevice_pair(cmd, err, data);
-        
+
+        if(idevice_pair(options, &error, data) == 0) error.pair_error = PAIR_E_SUCCESS;
+
+        Local<Object> idevicePairError = Object::New(isolate);
+        pack_idevice_pair_error(isolate, context, idevicePairError, &error);
         const unsigned argc = 2;
-        Local<Value> argv[argc] = { String::NewFromUtf8(isolate, read_stream(err)).ToLocalChecked(), String::NewFromUtf8(isolate, read_stream(data)).ToLocalChecked() };
+        Local<Value> argv[argc] = { idevicePairError, String::NewFromUtf8(isolate, read_stream(data)).ToLocalChecked() };
         
         callback->Call(context, Null(isolate), argc, argv).ToLocalChecked();
     }
