@@ -15,7 +15,8 @@ static char *udid = NULL;
 const struct idevice_pair_options default_idevice_pair_options = {
 	false, 	// debug
 	NULL, 	// udid
-	NULL 	// command
+	NULL, 	// command
+	NULL	// wifioption
 };
 
 const struct idevice_pair_error default_idevice_pair_error = { 
@@ -64,9 +65,17 @@ int idevice_pair(struct idevice_pair_options options, struct idevice_pair_error 
 	if(options.udid) udid = options.udid;
 
 	typedef enum {
-		OP_NONE = 0, OP_PAIR, OP_VALIDATE, OP_UNPAIR, OP_LIST, OP_HOSTID, OP_SYSTEMBUID
+		OP_NONE = 0, OP_PAIR, OP_VALIDATE, OP_UNPAIR, OP_LIST, OP_HOSTID, OP_SYSTEMBUID, OP_WIFI
 	} op_t;
 	op_t op = OP_NONE;
+
+	typedef enum {
+       WIFI_SHOW,
+       WIFI_ENABLE,
+       WIFI_DISABLE
+	} t_wifi;
+	t_wifi wifiop = WIFI_SHOW;
+
 
 	if (!strcmp(cmd, "pair")) {
 		op = OP_PAIR;
@@ -80,11 +89,27 @@ int idevice_pair(struct idevice_pair_options options, struct idevice_pair_error 
 		op = OP_HOSTID;
 	} else if (!strcmp(cmd, "systembuid")) {
 		op = OP_SYSTEMBUID;
+	} else if (!strcmp(cmd, "wifi")) {
+		op = OP_WIFI;
+		if (options.wifioption) {
+			if (!strcmp(options.wifioption, "show")) {
+				wifiop = WIFI_SHOW;
+			} else if (!strcmp(options.wifioption, "on")) {
+				wifiop = WIFI_ENABLE;
+			} else if (!strcmp(options.wifioption, "off")) {
+				wifiop = WIFI_DISABLE;
+			} else {
+				fprintf(error->error_message, "ERROR: Invalid WiFi option '%s' specified\n", options.wifioption);
+				error->pair_error = PAIR_E_INVALID_WIFI_OPTION;
+				exit(EXIT_FAILURE);
+			}
+		}
 	} else {
 		fprintf(error->error_message, "ERROR: Invalid command '%s' specified\n", cmd);
 		error->pair_error = PAIR_E_INVALID_COMMAND;
 		exit(EXIT_FAILURE);
 	}
+	
 
 	if (op == OP_SYSTEMBUID) {
 		char *systembuid = NULL;
@@ -181,35 +206,62 @@ int idevice_pair(struct idevice_pair_options options, struct idevice_pair_error 
 	switch(op) {
 		default:
 		case OP_PAIR:
-		error->lockdownd_error = lockdownd_pair(client, NULL);
-		if (error->lockdownd_error == LOCKDOWN_E_SUCCESS) {
-			fprintf(stream_out, "%s", udid);
-		} else {
-			result = EXIT_FAILURE;
-			print_error_message(error->lockdownd_error, error);
-		}
+			error->lockdownd_error = lockdownd_pair(client, NULL);
+			if (error->lockdownd_error == LOCKDOWN_E_SUCCESS) {
+				fprintf(stream_out, "%s", udid);
+			} else {
+				result = EXIT_FAILURE;
+				print_error_message(error->lockdownd_error, error);
+			}
 		break;
 
 		case OP_VALIDATE:
-		lockdownd_client_free(client);
-		client = NULL;
-		error->lockdownd_error = lockdownd_client_new_with_handshake(device, &client, TOOL_NAME);
-		if (error->lockdownd_error == LOCKDOWN_E_SUCCESS) {
-			fprintf(stream_out, "%s", udid);
-		} else {
-			result = EXIT_FAILURE;
-			print_error_message(error->lockdownd_error, error);
-		}
+			lockdownd_client_free(client);
+			client = NULL;
+			error->lockdownd_error = lockdownd_client_new_with_handshake(device, &client, TOOL_NAME);
+			if (error->lockdownd_error == LOCKDOWN_E_SUCCESS) {
+				fprintf(stream_out, "%s", udid);
+			} else {
+				result = EXIT_FAILURE;
+				print_error_message(error->lockdownd_error, error);
+			}
 		break;
 
 		case OP_UNPAIR:
-		error->lockdownd_error = lockdownd_unpair(client, NULL);
-		if (error->lockdownd_error == LOCKDOWN_E_SUCCESS) {
-			fprintf(stream_out, "%s", udid);
-		} else {
-			result = EXIT_FAILURE;
-			print_error_message(error->lockdownd_error, error);
-		}
+			error->lockdownd_error = lockdownd_unpair(client, NULL);
+			if (error->lockdownd_error == LOCKDOWN_E_SUCCESS) {
+				fprintf(stream_out, "%s", udid);
+			} else {
+				result = EXIT_FAILURE;
+				print_error_message(error->lockdownd_error, error);
+			}
+		break;
+		case OP_WIFI:
+
+			lockdownd_client_free(client);
+			client = NULL;
+			error->lockdownd_error = lockdownd_client_new_with_handshake(device, &client, TOOL_NAME);
+			if (wifiop == WIFI_SHOW) {
+				plist_t node;
+				if((error->lockdownd_error = lockdownd_get_value(client, "com.apple.mobile.wireless_lockdown", "EnableWifiConnections", &node)) == LOCKDOWN_E_SUCCESS) {
+					if (node) {
+						fprintf(stream_out, "%s", plist_bool_val_is_true(node) ? "ENABLED" : "DISABLED");
+						plist_free(node);
+						node = NULL;
+					}
+				} else {
+					result = EXIT_FAILURE;
+					print_error_message(error->lockdownd_error, error);
+				}
+			} else{ 
+				error->lockdownd_error = lockdownd_set_value(client, "com.apple.mobile.wireless_lockdown", "EnableWifiConnections", plist_new_bool(wifiop == WIFI_ENABLE));
+				if (error->lockdownd_error == LOCKDOWN_E_SUCCESS) {
+					fprintf(stream_out, "%s", wifiop == WIFI_ENABLE ? "ENABLED" : "DISABLED");
+				} else {
+					result = EXIT_FAILURE;
+					print_error_message(error->lockdownd_error, error);
+				}
+			}
 		break;
 	}
 

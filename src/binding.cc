@@ -208,11 +208,13 @@ namespace idevice_info_node {
         Local<Value> debug = object->Get(context, String::NewFromUtf8(isolate, "debug").ToLocalChecked()).ToLocalChecked();
         Local<Value> udid = object->Get(context, String::NewFromUtf8(isolate, "udid").ToLocalChecked()).ToLocalChecked();
         Local<Value> command = object->Get(context, String::NewFromUtf8(isolate, "command").ToLocalChecked()).ToLocalChecked();
+        Local<Value> wifioption = object->Get(context, String::NewFromUtf8(isolate, "wifioption").ToLocalChecked()).ToLocalChecked();
 
         idevice_pair_options options = default_idevice_pair_options;
         if (debug->IsBoolean()) { options.debug = debug->BooleanValue(isolate); }
         if (udid->IsString()) { options.udid = ToCString(isolate, udid); }
         if (command->IsString()) { options.command = ToCString(isolate, command); }
+        if (wifioption->IsString()) { options.wifioption = ToCString(isolate, wifioption); }
 
         idevice_pair_error error = default_idevice_pair_error;
         error.udid = tmpfile();

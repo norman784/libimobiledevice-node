@@ -2,7 +2,7 @@ const cp = require('child_process');
 const { idevice_id, CannotRetrieveDeviceListError, CannotMallocMemoryError, CannotReallocMemoryError } = require('./lib/idevice_id');
 const { idevice_info, InfoInvalidDomainError, InfoUnkownError } = require('./lib/idevice_info');
 const { UnkownErrror, IdeviceNoDeviceFoundError, LockdownPasswordProtectedError, LockdownInvalidHostIdError, LockdownPairingDialongResponsoPendingError, LockdownUserDeniedPairingError, LockdownError } = require('./lib/errors');
-const { PairInvalidCommandError, PairUnkownError, idevice_pair, getPairParameters } = require('./lib/idevice_pair');
+const { PairInvalidCommandError, PairInvalidWifiOptionError, PairUnkownError, idevice_pair, getPairParameters, WIFI_OPTIONS, WIFI_STATE } = require('./lib/idevice_pair');
 const { idevice_backup2, getBackup2Parameters, BACKUP2_COMMANDS, Backup2Error, EncryptionDeviceLockedError, EncryptionInvalidPasswordError, EncryptionAlreadyEnabledError, EncryptionAlreadyDisabledError } = require('./lib/idevice_backup2');
 
 // Export errors
@@ -23,6 +23,7 @@ exports.LockdownUserDeniedPairingError = LockdownUserDeniedPairingError;
 exports.LockdownError = LockdownError;
 // Pair errors
 exports.PairInvalidCommandError = PairInvalidCommandError;
+exports.PairInvalidWifiOptionError = PairInvalidWifiOptionError;
 exports.PairUnkownError = PairUnkownError;
 // Backup errors
 exports.Backup2Error = Backup2Error;
@@ -48,6 +49,8 @@ exports.id = (options, callback) => idevice_id(options, callback);
  */
 exports.info = (options, callback) => idevice_info(options, callback);
 
+exports.WIFI_OPTIONS = WIFI_OPTIONS;
+exports.WIFI_STATE = WIFI_STATE;
 exports.pair = {
 	/**
 	 * pair –will try to pair to the device, if it has success then will return the udid.
@@ -102,6 +105,15 @@ exports.pair = {
 	 */
 	hostid: (options, callback) => {
 		const {pOptions, pCallback} = getPairParameters('hostid', options, callback);
+		idevice_pair(pOptions, pCallback);
+	},
+	/**
+	 * systembuid –returns the system buid of the usbmuxd host.
+	 * @param {{debug: boolean, udid: string, wifioptions: WIFI_OPTIONS}} [options]
+	 * @param {(error: (PairInvalidCommandError | PairInvalidWifiOptionError | IdeviceNoDeviceFoundError | LockdownError | PairUnkownError), state: WIFI_STATE)} callback 
+	 */
+	wifi: (options, callback) => {
+		const {pOptions, pCallback} = getPairParameters('wifi', options, callback);
 		idevice_pair(pOptions, pCallback);
 	}
 }

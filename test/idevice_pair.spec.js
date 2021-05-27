@@ -1,9 +1,9 @@
 const { initStubs, initSpies, stubChildOn } = require('./helpers');
 const cp = require('child_process');
 const { native_lockdown_errors, native_idevice_errors } = require('../lib/errors');
-const { pair, IdeviceNoDeviceFoundError, LockdownUserDeniedPairingError, LockdownPasswordProtectedError, LockdownInvalidHostIdError, LockdownPairingDialongResponsoPendingError, LockdownError } = require('../index');
+const { pair, WIFI_OPTIONS, IdeviceNoDeviceFoundError, LockdownUserDeniedPairingError, LockdownPasswordProtectedError, LockdownInvalidHostIdError, LockdownPairingDialongResponsoPendingError, LockdownError, PairInvalidCommandError, PairInvalidWifiOptionError, PairUnkownError } = require('../index');
 const { expect } = require('chai');
-const { native_pair_errors, PairInvalidCommandError, PairUnkownError, idevice_pair } = require('../lib/idevice_pair');
+const { native_pair_errors } = require('../lib/idevice_pair');
 const { match } = require("sinon");
 
 describe('idevice_pair tests', () => {
@@ -14,7 +14,7 @@ describe('idevice_pair tests', () => {
         on: stubChildOn(stubErrors(0, 0, 0, ''),''),
         disconnect: spies.child.disconnect.returns(() => {})
     }};
-    let getDefaultOptions = (command) => {return {debug: false, command: command, udid: null}; };
+    let getDefaultOptions = (command) => { return {debug: false, command: command, udid: null, wifioption: WIFI_OPTIONS.show}; };
     let stubs = {};
     let spies = {};
 
@@ -73,6 +73,16 @@ describe('idevice_pair tests', () => {
         const spySend = spies.child.send;
         spies.child.fork.returns(defaultForkStub(spies));
         pair.hostid(expectedOptions, (error, udid) => {
+            expect(spySend.calledWith(match(expectedOptions))).to.equal(true);
+        });
+    });
+
+
+    it('id.pair.wifi must be called with wifi option', () => {
+        let expectedOptions = getDefaultOptions('wifi');
+        const spySend = spies.child.send;
+        spies.child.fork.returns(defaultForkStub(spies));
+        pair.wifi(expectedOptions, (error, udid) => {
             expect(spySend.calledWith(match(expectedOptions))).to.equal(true);
         });
     });
@@ -174,6 +184,31 @@ describe('idevice_pair tests', () => {
             expect(spyFork.called).to.equal(true);
             expect(spySend.called).to.equal(true);
             expect(error).to.be.instanceOf(PairInvalidCommandError);
+            expect(udid).to.be.null;
+        });
+
+        expect(spyDisconnect.called).to.equal(true);
+    });
+
+    it('id.pair must fail with invalid command', () => {
+        const spySend = spies.child.send;
+        const spyDisconnect = spies.child.disconnect;
+        const spyFork = spies.child.fork.returns({
+            send: spySend.returns((options) => {}),
+            on: stubChildOn(stubErrors(
+                    native_pair_errors.PAIR_E_INVALID_WIFI_OPTION,
+                    native_idevice_errors.IDEVICE_E_UNKNOWN_ERROR,
+                    native_lockdown_errors.LOCKDOWN_E_UNKNOWN_ERROR, 
+                    ''
+                ), 
+                null),
+            disconnect: spyDisconnect.returns(() => {})
+        });
+
+        pair.wifi({}, (error, udid) => {
+            expect(spyFork.called).to.equal(true);
+            expect(spySend.called).to.equal(true);
+            expect(error).to.be.instanceOf(PairInvalidWifiOptionError);
             expect(udid).to.be.null;
         });
 

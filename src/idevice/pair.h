@@ -10,13 +10,15 @@
 typedef enum {
     PAIR_E_SUCCESS = 0,
     PAIR_E_INVALID_COMMAND = -1,
-    PAIR_E_UNKOWN_ERROR = -2
+    PAIR_E_UNKOWN_ERROR = -2,
+    PAIR_E_INVALID_WIFI_OPTION = -3
 } pair_error;
 
 struct idevice_pair_options {
     bool debug;
     char *udid;
     char *command;
+    char *wifioption;
 };
 
 extern const struct idevice_pair_options default_idevice_pair_options;
