@@ -1,7 +1,7 @@
 const imobiledevice = require('../index');
 const homedir = require('os').homedir();
 
-const backup_path = homedir;
+const backup_path = homedir + '/backuptemp/';
 
 const parseProgress = (progressMessage) => {
     const regex = /\d+/g
@@ -15,9 +15,7 @@ function printProgress(progress){
     process.stdout.write(progress + '% - ');
 }
 
-imobiledevice.backup2({
-    debug: false,
-    backup: true,
+imobiledevice.backup2.backup({
     backup_directory: backup_path
 }, (error, data) => {
     if (error) { console.error('error: ', error); }
