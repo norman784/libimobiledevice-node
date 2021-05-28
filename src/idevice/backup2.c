@@ -83,7 +83,8 @@ enum cmd_flags {
     CMD_FLAG_ENCRYPTION_CHANGEPW        = (1 << 8),
     CMD_FLAG_FORCE_FULL_BACKUP          = (1 << 9),
     CMD_FLAG_CLOUD_ENABLE               = (1 << 10),
-    CMD_FLAG_CLOUD_DISABLE              = (1 << 11)
+    CMD_FLAG_CLOUD_DISABLE              = (1 << 11),
+    CMD_FLAG_RESTORE_SKIP_APPS          = (1 << 12)
 };
 
 static int backup_domain_changed = 0;
@@ -1319,6 +1320,7 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
     char* udid = NULL;
     char* source_udid = NULL;
     lockdownd_service_descriptor_t service = NULL;
+    char *command = options.command;
     int cmd = -1;
     int cmd_flags = 0;
     int is_full_backup = 0;
@@ -1344,50 +1346,40 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
     if (options.debug) idevice_set_debug_level(1);
     if (options.udid != NULL) udid = strdup(options.udid);
     if (options.source != NULL) source_udid = strdup(options.source);
-    if (options.backup) cmd = CMD_BACKUP;
-    if (options.restore) cmd = CMD_RESTORE;
-    if (options.system) cmd_flags |= CMD_FLAG_RESTORE_SYSTEM_FILES;
-    if (options.reboot) cmd_flags |= CMD_FLAG_RESTORE_REBOOT;
-    if (options.copy) cmd_flags |= CMD_FLAG_RESTORE_COPY_BACKUP;
-    if (options.settings) cmd_flags |= CMD_FLAG_RESTORE_SETTINGS;
-    if (options.remove) cmd_flags |= CMD_FLAG_RESTORE_REMOVE_ITEMS;
     if (options.interactive) interactive_mode = 1;
-    if (options.password != NULL) {
-        if (backup_password) free(backup_password);
-        backup_password = strdup(options.password);
+    if (options.backup_directory != NULL) {
+        backup_directory = options.backup_directory;
     }
-    if (options.cloud != NULL) {
-        cmd = CMD_CLOUD;
-        if (!strcmp(options.cloud, "on")) {
-            cmd_flags |= CMD_FLAG_CLOUD_ENABLE;
-        } else if (!strcmp(options.cloud, "off")) {
-            cmd_flags |= CMD_FLAG_CLOUD_DISABLE;
-        } else {
-            fprintf(stream_err, "Invalid argument '%s' for cloud command; must be either 'on' or 'off'.\n", options.cloud);
-            return;
+
+    if (!strcmp(command, "backup")) {
+        cmd = CMD_BACKUP;
+        if (options.backup.full) cmd_flags |= CMD_FLAG_FORCE_FULL_BACKUP;
+    } else if (!strcmp(command, "restore")) {
+        cmd = CMD_RESTORE;
+        if (options.restore.system) cmd_flags |= CMD_FLAG_RESTORE_SYSTEM_FILES;
+        if (options.restore.reboot) cmd_flags |= CMD_FLAG_RESTORE_REBOOT;
+        if (options.restore.copy) cmd_flags |= CMD_FLAG_RESTORE_COPY_BACKUP;
+        if (options.restore.settings) cmd_flags |= CMD_FLAG_RESTORE_SETTINGS;
+        if (options.restore.remove) cmd_flags |= CMD_FLAG_RESTORE_REMOVE_ITEMS;
+        if (options.restore.skip_apps) cmd_flags |= CMD_FLAG_RESTORE_SKIP_APPS;
+        if (options.restore.password != NULL) {
+            if (backup_password) free(backup_password);
+            backup_password = strdup(options.restore.password);
         }
-    }
-    if (options.full) cmd_flags |= CMD_FLAG_FORCE_FULL_BACKUP;
-    if (options.info) {
+    } else if (!strcmp(command, "info")) {
         cmd = CMD_INFO;
         verbose = 0;
-    }
-    if (options.list) {
+    } else if (!strcmp(command, "list")) {
         cmd = CMD_LIST;
         verbose = 0;
-    }
-    if (options.unback) {
+    } else if (!strcmp(command, "unback")) {
         cmd = CMD_UNBACK;
-    }
-    if (options.encryption.status != NULL) {
+    } else if (!strcmp(command, "encryption")) {
         cmd = CMD_CHANGEPW;
-        if (!strcmp(options.encryption.status, "on")) {
+        if (options.encryption.enable) {
             cmd_flags |= CMD_FLAG_CLOUD_ENABLE;
-        } else if (!strcmp(options.encryption.status, "off")) {
-            cmd_flags |= CMD_FLAG_CLOUD_DISABLE;
         } else {
-            fprintf(stream_err, "Invalid argument '%s' for encryption command; must be either 'on' or 'off'.\n", options.encryption.status);
-            return;
+            cmd_flags |= CMD_FLAG_CLOUD_DISABLE;
         }
         
         if (newpw) {
@@ -1406,8 +1398,7 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
                 backup_password = strdup(options.encryption.password);
             }
         }
-    }
-    if (options.changepw.newpw != NULL || options.changepw.backup_password != NULL) {
+    } else if (!strcmp(command, "changepw")) {
         cmd = CMD_CHANGEPW;
         cmd_flags |= CMD_FLAG_ENCRYPTION_CHANGEPW;
         if (newpw) {
@@ -1419,20 +1410,23 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
             backup_password = NULL;
         }
         
-        if (options.changepw.backup_password != NULL) {
+        if(options.changepw.backup_password != NULL && options.changepw.newpw != NULL) {
             backup_password = strdup(options.changepw.backup_password);
-            if (options.changepw.newpw == NULL) {
-                fprintf(stream_err, "Old and new passwords have to be passed as arguments for the changepw command\n");
-                return;
-            }
             newpw = strdup(options.changepw.newpw);
         } else {
             fprintf(stream_err, "Old and new passwords have to be passed as arguments for the changepw command\n");
             return;
         }
-    }
-    if (options.backup_directory != NULL) {
-        backup_directory = options.backup_directory;
+    } else if(!strcmp(command, "cloud")) {
+        cmd = CMD_CLOUD;
+        if (options.cloud.enable) {
+            cmd_flags |= CMD_FLAG_CLOUD_ENABLE;
+        } else {
+            cmd_flags |= CMD_FLAG_CLOUD_DISABLE;
+        }
+    } else {
+        fprintf(stream_err, "Invalid command '%s' provided", command);
+        return;
     }
     
     /* verify options */
@@ -1564,7 +1558,7 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
         };
         np_observe_notifications(np, noties);
     } else {
-        printf("ERROR: Could not start service %s.\n", NP_SERVICE_NAME);
+        fprintf(stream_err, "ERROR: Could not start service %s.\n", NP_SERVICE_NAME);
     }
     
     afc_client_t afc = NULL;

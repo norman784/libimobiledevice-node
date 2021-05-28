@@ -51,7 +51,7 @@ namespace idevice_info_node {
         
         if (!args[2]->IsFunction()) {
             const unsigned argc = 2;
-            Local<Value> argv[argc] = {String::NewFromUtf8(_isolate, "Third argument must be a function").ToLocalChecked(), String::NewFromUtf8(_isolate, NULL).ToLocalChecked() };
+            Local<Value> argv[argc] = { String::NewFromUtf8(_isolate, "Third argument must be a function").ToLocalChecked(), String::NewFromUtf8(_isolate, NULL).ToLocalChecked() };
             callback->Call(context, Null(_isolate), argc, argv).ToLocalChecked();
             return;
         }
@@ -61,71 +61,51 @@ namespace idevice_info_node {
         Local<Value> debug = object->Get(context, String::NewFromUtf8(_isolate, "debug").ToLocalChecked()).ToLocalChecked();
         Local<Value> udid = object->Get(context, String::NewFromUtf8(_isolate, "udid").ToLocalChecked()).ToLocalChecked();
         Local<Value> source = object->Get(context, String::NewFromUtf8(_isolate, "source").ToLocalChecked()).ToLocalChecked();
+        Local<Value> command = object->Get(context, String::NewFromUtf8(_isolate, "command").ToLocalChecked()).ToLocalChecked();
         Local<Value> backup = object->Get(context, String::NewFromUtf8(_isolate, "backup").ToLocalChecked()).ToLocalChecked();
         Local<Value> restore = object->Get(context, String::NewFromUtf8(_isolate, "restore").ToLocalChecked()).ToLocalChecked();
-        Local<Value> system = object->Get(context, String::NewFromUtf8(_isolate, "system").ToLocalChecked()).ToLocalChecked();
-        Local<Value> reboot = object->Get(context, String::NewFromUtf8(_isolate, "reboot").ToLocalChecked()).ToLocalChecked();
-        Local<Value> copy = object->Get(context, String::NewFromUtf8(_isolate, "copy").ToLocalChecked()).ToLocalChecked();
-        Local<Value> settings = object->Get(context, String::NewFromUtf8(_isolate, "settings").ToLocalChecked()).ToLocalChecked();
-        Local<Value> remove = object->Get(context, String::NewFromUtf8(_isolate, "remove").ToLocalChecked()).ToLocalChecked();
-        Local<Value> password = object->Get(context, String::NewFromUtf8(_isolate, "password").ToLocalChecked()).ToLocalChecked();
         Local<Value> cloud = object->Get(context, String::NewFromUtf8(_isolate, "cloud").ToLocalChecked()).ToLocalChecked();
-        Local<Value> full = object->Get(context, String::NewFromUtf8(_isolate, "full").ToLocalChecked()).ToLocalChecked();
-        Local<Value> info = object->Get(context, String::NewFromUtf8(_isolate, "info").ToLocalChecked()).ToLocalChecked();
-        Local<Value> list = object->Get(context, String::NewFromUtf8(_isolate, "list").ToLocalChecked()).ToLocalChecked();
-        Local<Value> unback = object->Get(context, String::NewFromUtf8(_isolate, "unback").ToLocalChecked()).ToLocalChecked();
         Local<Value> encryption = object->Get(context, String::NewFromUtf8(_isolate, "encryption").ToLocalChecked()).ToLocalChecked();
         Local<Value> interactive = object->Get(context, String::NewFromUtf8(_isolate, "interactive").ToLocalChecked()).ToLocalChecked();
         Local<Value> changepw = object->Get(context, String::NewFromUtf8(_isolate, "changepw").ToLocalChecked()).ToLocalChecked();
         Local<Value> backup_directory = object->Get(context, String::NewFromUtf8(_isolate, "backup_directory").ToLocalChecked()).ToLocalChecked();
         
-        idevice_backup2_options options;
-        options.debug = false;
-        options.udid = NULL;
-        options.source = NULL;
-        options.backup = false;
-        options.restore = false;
-        options.system = false;
-        options.reboot = false;
-        options.copy = false;
-        options.settings = false;
-        options.remove = false;
-        options.password = NULL;
-        options.cloud = NULL;
-        options.full = false;
-        options.info = false;
-        options.list = false;
-        options.unback = false;
-        options.interactive = false;
-        options.encryption.status = NULL;
-        options.encryption.password = NULL;
-        options.changepw.backup_password = NULL;
-        options.changepw.newpw = NULL;
-        options.backup_directory = NULL;
+        idevice_backup2_options options = default_idevice_backup2_options;
         
         if (debug->IsBoolean()) { options.debug = debug->BooleanValue(_isolate); }
         if (udid->IsString()) { options.udid = ToCString(_isolate, udid); }
         if (source->IsString()) { options.source = ToCString(_isolate, source); }
-        if (backup->IsBoolean()) { options.backup = backup->BooleanValue(_isolate); }
-        if (restore->IsBoolean()) { options.restore = restore->BooleanValue(_isolate); }
-        if (system->IsBoolean()) { options.system = system->BooleanValue(_isolate); }
-        if (reboot->IsBoolean()) { options.reboot = reboot->BooleanValue(_isolate); }
-        if (copy->IsBoolean()) { options.copy = copy->BooleanValue(_isolate); }
-        if (settings->IsBoolean()) { options.settings = settings->BooleanValue(_isolate); }
-        if (remove->IsBoolean()) { options.remove = remove->BooleanValue(_isolate); }
-        if (password->IsString()) { options.password = ToCString(_isolate, password); }
-        if (cloud->IsString()) { options.cloud = ToCString(_isolate, cloud); }
-        if (full->IsBoolean()) { options.full = full->BooleanValue(_isolate); }
-        if (info->IsBoolean()) { options.info = info->BooleanValue(_isolate); }
-        if (list->IsBoolean()) { options.list = list->BooleanValue(_isolate); }
-        if (interactive->IsBoolean()) { options.interactive = interactive->BooleanValue(_isolate); }
-        if (unback->IsBoolean()) { options.unback = unback->BooleanValue(_isolate); }
-        if (backup_directory->IsString()) { options.backup_directory = ToCString(_isolate, backup_directory); }
+        if (command->IsString()) { options.command = ToCString(_isolate, command); }
+        if (backup->IsObject()) {
+            Local<Object> backupObject = backup->ToObject(context).ToLocalChecked();
+            Local<Value> full = backupObject->Get(context, String::NewFromUtf8(_isolate, "full").ToLocalChecked()).ToLocalChecked();
+            if(full->IsBoolean()) options.backup.full = full->BooleanValue(_isolate); 
+        }
+        if (restore->IsObject()) {
+            Local<Object> restoreObject = restore->ToObject(context).ToLocalChecked();
+            Local<Value> system = restoreObject->Get(context, String::NewFromUtf8(_isolate, "system").ToLocalChecked()).ToLocalChecked();
+            Local<Value> reboot = restoreObject->Get(context, String::NewFromUtf8(_isolate, "reboot").ToLocalChecked()).ToLocalChecked();
+            Local<Value> copy = restoreObject->Get(context, String::NewFromUtf8(_isolate, "copy").ToLocalChecked()).ToLocalChecked();
+            Local<Value> settings = restoreObject->Get(context, String::NewFromUtf8(_isolate, "settings").ToLocalChecked()).ToLocalChecked();
+            Local<Value> remove = restoreObject->Get(context, String::NewFromUtf8(_isolate, "remove").ToLocalChecked()).ToLocalChecked();
+            Local<Value> password = restoreObject->Get(context, String::NewFromUtf8(_isolate, "password").ToLocalChecked()).ToLocalChecked();
+            if (system->IsBoolean()) { options.restore.system = system->BooleanValue(_isolate); }
+            if (reboot->IsBoolean()) { options.restore.reboot = reboot->BooleanValue(_isolate); }
+            if (copy->IsBoolean()) { options.restore.copy = copy->BooleanValue(_isolate); }
+            if (settings->IsBoolean()) { options.restore.settings = settings->BooleanValue(_isolate); }
+            if (remove->IsBoolean()) { options.restore.remove = remove->BooleanValue(_isolate); }
+            if (password->IsString()) { options.restore.password = ToCString(_isolate, password); }
+        }
+        if (cloud->IsObject()) {
+            Local<Object> cloudObject = cloud->ToObject(context).ToLocalChecked();
+            Local<Value> enable = cloudObject->Get(context, String::NewFromUtf8(_isolate, "enable").ToLocalChecked()).ToLocalChecked();
+            if (enable->IsBoolean()) options.cloud.enable = enable->BooleanValue(_isolate);
+        }
         if (encryption->IsObject()) {
             Local<Object> encryptionObject = encryption->ToObject(context).ToLocalChecked();
-            Local<Value> status = encryptionObject->Get(context, String::NewFromUtf8(_isolate, "status").ToLocalChecked()).ToLocalChecked();
+            Local<Value> enable = encryptionObject->Get(context, String::NewFromUtf8(_isolate, "enable").ToLocalChecked()).ToLocalChecked();
             Local<Value> password = encryptionObject->Get(context, String::NewFromUtf8(_isolate, "password").ToLocalChecked()).ToLocalChecked();
-            if (status->IsString()) options.encryption.status = ToCString(_isolate, status);
+            if (enable->IsString()) options.encryption.enable = ToCString(_isolate, enable);
             if (password->IsString()) options.encryption.password = ToCString(_isolate, password);
         }
         if (changepw->IsObject()) {
@@ -135,6 +115,8 @@ namespace idevice_info_node {
             if (newpw->IsString()) options.changepw.newpw = ToCString(_isolate, newpw);
             if (backup_password->IsString()) options.changepw.backup_password = ToCString(_isolate, backup_password);
         }
+        if (interactive->IsBoolean()) { options.interactive = interactive->BooleanValue(_isolate); }
+        if (backup_directory->IsString()) { options.backup_directory = ToCString(_isolate, backup_directory); }
         
         FILE *stream_err = tmpfile();
         FILE *stream_out = tmpfile();

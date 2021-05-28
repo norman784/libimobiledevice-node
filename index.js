@@ -3,6 +3,7 @@ const { idevice_id, CannotRetrieveDeviceListError, CannotMallocMemoryError, Cann
 const { idevice_info, InfoInvalidDomainError, InfoUnkownError } = require('./lib/idevice_info');
 const { UnkownErrror, IdeviceNoDeviceFoundError, LockdownPasswordProtectedError, LockdownInvalidHostIdError, LockdownPairingDialongResponsoPendingError, LockdownUserDeniedPairingError, LockdownError } = require('./lib/errors');
 const { PairInvalidCommandError, PairUnkownError, idevice_pair, getPairParameters } = require('./lib/idevice_pair');
+const { idevice_backup2, getBackup2Parameters, BACKUP2_COMMANDS } = require('./lib/idevice_backup2');
 
 // Export errors
 exports.UnkownErrror = UnkownErrror;
@@ -23,40 +24,6 @@ exports.LockdownError = LockdownError;
 // Pair errors
 exports.PairInvalidCommandError = PairInvalidCommandError;
 exports.PairUnkownError = PairUnkownError;
-
-exports.backup2 = function(options, callback, progress) {
-	if (typeof options === 'function') {
-		if (typeof callback === 'function') progress = callback
-		callback = options
-		options = null
-	}
-
-	options = options || {}
-
-	if (options.uuid && !options.udid) options.udid = options.uuid
-
-	if (options.constructor.name !== 'Object') {
-		callback(Error('Options must be an object'), null)
-	} else if (typeof callback !== 'function') {
-		callback(Error('Callback is not a function'), null)
-	} else if (typeof progress !== 'function') {
-		callback(Error('Progress callback is not a function'), null)
-	} else {
-		const child = cp.fork(`${__dirname}/lib/backup2_worker`)
-		child.send(options)
-		child.on('message', res => {
-			if (res.progress) progress(res.progress)
-			else {
-				callback(res.err, res.data)
-				child.disconnect()
-			}
-		})
-		return child
-	}
-
-	return null
-}
-
 
 /**
  * Return device list found via usb and network.
@@ -129,5 +96,109 @@ exports.pair = {
 	hostid: (options, callback) => {
 		const {pOptions, pCallback} = getPairParameters('hostid', options, callback);
 		idevice_pair(pOptions, pCallback);
+	}
+}
+
+exports.backup2 = {
+	/**
+	 * backup –create backup for the device
+	 * @param {{debug: boolean,
+	 * udid: string,
+	 * source: string,
+	 * backup: { full: boolean },
+	 * backup_directory: string
+	 * }} options full flag will force full backup from device.
+	 * @param {(error: string, files: string) => void} callback 
+	 * @param {(progress: string) => void} progress 
+	 */
+	backup: (options, callback, progress) => {
+		const { bOptions, bCallback, bProgress } = getBackup2Parameters(BACKUP2_COMMANDS.backup, options, callback, progress);
+		idevice_backup2(bOptions, bCallback, bProgress);
+	},
+	/**
+	 * restore –restore last backup to the device
+	 * @param {{ debug: boolean,
+	 * udid: string, 
+	 * source: string, 
+	 * restore: { system: boolean, reboot: boolean, copy: boolean, settings: boolean, remove: boolean, skip_apps: boolean, password: string },
+	 * interactive: boolean,
+	 * backup_directory: string
+	 * }} options 
+	 * @param {(error: string, files: string) => void} callback 
+	 * @param {(progress: string) => void} progress 
+	 */
+	restore: (options, callback, progress) => {
+		const { bOptions, bCallback, bProgress } = getBackup2Parameters(BACKUP2_COMMANDS.restore, options, callback, progress);
+		idevice_backup2(bOptions, bCallback, bProgress);
+	},
+	/**
+	 * info –show details about last completed backup of device
+	 * @param {{ debug: boolean, udid: string, source: string, backup_directory: string }} options 
+	 * @param {(error: string, files: string) => void} callback 
+	 * @param {(progress: string) => void} progress 
+	 */
+	info: (options, callback, progress) => {
+		const { bOptions, bCallback, bProgress } = getBackup2Parameters(BACKUP2_COMMANDS.info, options, callback, progress);
+		idevice_backup2(bOptions, bCallback, bProgress);
+	},
+	/**
+	 * list –list files of last completed backup in CSV format
+	 * @param {{ debug: boolean, udid: string, source: string, backup_directory: string }} options 
+	 * @param {(error: string, files: string) => void} callback 
+	 * @param {(progress: string) => void} progress 
+	 */
+	list: (options, callback, progress) => {
+		const { bOptions, bCallback, bProgress } = getBackup2Parameters(BACKUP2_COMMANDS.list, options, callback, progress);
+		idevice_backup2(bOptions, bCallback, bProgress);
+	},
+	/**
+	 * unback –unpack a completed backup in DIRECTORY/_unback_/
+	 * @param {{ debug: boolean, udid: string, source: string, backup_directory: string }} options 
+	 * @param {(error: string, files: string) => void} callback 
+	 * @param {(progress: string) => void} progress 
+	 */
+	 unback: (options, callback, progress) => {
+		const { bOptions, bCallback, bProgress } = getBackup2Parameters(BACKUP2_COMMANDS.unback, options, callback, progress);
+		idevice_backup2(bOptions, bCallback, bProgress);
+	},
+	/**
+	 * encryption –enable or disable backup encryption
+	 * @param {{ debug: boolean,
+	 * udid: string, 
+	 * source: string, 
+	 * encryption: { enable: boolean, password: string },
+	 * interactive: boolean
+	 * }} options encryption.enable flag must be set to true if you want to encrypt the device.
+	 * @param {(error: string, files: string) => void} callback 
+	 * @param {(progress: string) => void} progress 
+	 */
+	encryption: (options, callback, progress) => {
+		const { bOptions, bCallback, bProgress } = getBackup2Parameters(BACKUP2_COMMANDS.encryption, options, callback, progress);
+		idevice_backup2(bOptions, bCallback, bProgress);
+	},
+	/**
+	 * changePassword —change backup password on target device
+	 * @param {{ debug: boolean,
+	 * udid: string, 
+	 * source: string, 
+	 * changepw: { backup_password: string, newpw: string },
+	 * interactive: boolean
+	 * }} options 
+	 * @param {(error: string, files: string) => void} callback 
+	 * @param {(progress: string) => void} progress 
+	 */
+	changePassword: (options, callback, progress) => {
+		const { bOptions, bCallback, bProgress } = getBackup2Parameters(BACKUP2_COMMANDS.changepw, options, callback, progress);
+		idevice_backup2(bOptions, bCallback, bProgress);
+	},
+	/**
+	 * cloud –enable or disable cloud use (requires iCloud account)
+	 * @param {{ debug: boolean, udid: string, source: string, cloud: { enable: boolean }, interactive: boolean}} options 
+	 * @param {(error: string, files: string) => void} callback 
+	 * @param {(progress: string) => void} progress 
+	 */
+	cloud: (options, callback, progress) => {
+		const { bOptions, bCallback, bProgress } = getBackup2Parameters(BACKUP2_COMMANDS.cloud, options, callback, progress);
+		idevice_backup2(bOptions, bCallback, bProgress);
 	}
 }
