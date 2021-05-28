@@ -105,7 +105,7 @@ namespace idevice_info_node {
             Local<Object> encryptionObject = encryption->ToObject(context).ToLocalChecked();
             Local<Value> enable = encryptionObject->Get(context, String::NewFromUtf8(_isolate, "enable").ToLocalChecked()).ToLocalChecked();
             Local<Value> password = encryptionObject->Get(context, String::NewFromUtf8(_isolate, "password").ToLocalChecked()).ToLocalChecked();
-            if (enable->IsString()) options.encryption.enable = ToCString(_isolate, enable);
+            if (enable->IsBoolean()) options.encryption.enable = enable->BooleanValue(_isolate);
             if (password->IsString()) options.encryption.password = ToCString(_isolate, password);
         }
         if (changepw->IsObject()) {

@@ -1343,7 +1343,11 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
     signal(SIGPIPE, SIG_IGN);
 #endif
     
-    if (options.debug) idevice_set_debug_level(1);
+    if (options.debug) { 
+        idevice_set_debug_level(1);
+    } else {
+        verbose = 0;
+    }
     if (options.udid != NULL) udid = strdup(options.udid);
     if (options.source != NULL) source_udid = strdup(options.source);
     if (options.interactive) interactive_mode = 1;
@@ -1377,9 +1381,9 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
     } else if (!strcmp(command, "encryption")) {
         cmd = CMD_CHANGEPW;
         if (options.encryption.enable) {
-            cmd_flags |= CMD_FLAG_CLOUD_ENABLE;
+            cmd_flags |= CMD_FLAG_ENCRYPTION_ENABLE;
         } else {
-            cmd_flags |= CMD_FLAG_CLOUD_DISABLE;
+            cmd_flags |= CMD_FLAG_ENCRYPTION_DISABLE;
         }
         
         if (newpw) {
