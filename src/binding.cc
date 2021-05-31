@@ -61,6 +61,7 @@ namespace idevice_info_node {
         Local<Value> debug = object->Get(context, String::NewFromUtf8(_isolate, "debug").ToLocalChecked()).ToLocalChecked();
         Local<Value> udid = object->Get(context, String::NewFromUtf8(_isolate, "udid").ToLocalChecked()).ToLocalChecked();
         Local<Value> source = object->Get(context, String::NewFromUtf8(_isolate, "source").ToLocalChecked()).ToLocalChecked();
+        Local<Value> network = object->Get(context, String::NewFromUtf8(_isolate, "network").ToLocalChecked()).ToLocalChecked();
         Local<Value> command = object->Get(context, String::NewFromUtf8(_isolate, "command").ToLocalChecked()).ToLocalChecked();
         Local<Value> backup = object->Get(context, String::NewFromUtf8(_isolate, "backup").ToLocalChecked()).ToLocalChecked();
         Local<Value> restore = object->Get(context, String::NewFromUtf8(_isolate, "restore").ToLocalChecked()).ToLocalChecked();
@@ -75,6 +76,7 @@ namespace idevice_info_node {
         if (debug->IsBoolean()) { options.debug = debug->BooleanValue(_isolate); }
         if (udid->IsString()) { options.udid = ToCString(_isolate, udid); }
         if (source->IsString()) { options.source = ToCString(_isolate, source); }
+        if (network->IsBoolean()) { options.network = network->BooleanValue(_isolate); }
         if (command->IsString()) { options.command = ToCString(_isolate, command); }
         if (backup->IsObject()) {
             Local<Object> backupObject = backup->ToObject(context).ToLocalChecked();

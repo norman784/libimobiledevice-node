@@ -105,6 +105,7 @@ exports.backup2 = {
 	 * @param {{debug: boolean,
 	 * udid: string,
 	 * source: string,
+	 * network: boolean,
 	 * backup: { full: boolean },
 	 * backup_directory: string
 	 * }} options full flag will force full backup from device.
@@ -119,7 +120,8 @@ exports.backup2 = {
 	 * restore –restore last backup to the device
 	 * @param {{ debug: boolean,
 	 * udid: string, 
-	 * source: string, 
+	 * source: string,
+	 * network: boolean,
 	 * restore: { system: boolean, reboot: boolean, copy: boolean, settings: boolean, remove: boolean, skip_apps: boolean, password: string },
 	 * interactive: boolean,
 	 * backup_directory: string
@@ -133,7 +135,7 @@ exports.backup2 = {
 	},
 	/**
 	 * info –show details about last completed backup of device
-	 * @param {{ debug: boolean, udid: string, source: string, backup_directory: string }} options 
+	 * @param {{ debug: boolean, udid: string, source: string, network: boolean, backup_directory: string }} options 
 	 * @param {(error: string, files: string) => void} callback 
 	 * @param {(progress: string) => void} progress 
 	 */
@@ -143,7 +145,7 @@ exports.backup2 = {
 	},
 	/**
 	 * list –list files of last completed backup in CSV format
-	 * @param {{ debug: boolean, udid: string, source: string, backup_directory: string }} options 
+	 * @param {{ debug: boolean, udid: string, source: string, network: boolean, backup_directory: string }} options 
 	 * @param {(error: string, files: string) => void} callback 
 	 * @param {(progress: string) => void} progress 
 	 */
@@ -153,7 +155,7 @@ exports.backup2 = {
 	},
 	/**
 	 * unback –unpack a completed backup in DIRECTORY/_unback_/
-	 * @param {{ debug: boolean, udid: string, source: string, backup_directory: string }} options 
+	 * @param {{ debug: boolean, udid: string, source: string, network: boolean, backup_directory: string }} options 
 	 * @param {(error: string, files: string) => void} callback 
 	 * @param {(progress: string) => void} progress 
 	 */
@@ -165,7 +167,8 @@ exports.backup2 = {
 	 * encryption –enable or disable backup encryption
 	 * @param {{ debug: boolean,
 	 * udid: string, 
-	 * source: string, 
+	 * source: string,
+	 * network: boolean,
 	 * encryption: { enable: boolean, password: string },
 	 * interactive: boolean
 	 * }} options encryption.enable flag must be set to true if you want to encrypt the device.
@@ -180,7 +183,8 @@ exports.backup2 = {
 	 * changePassword —change backup password on target device
 	 * @param {{ debug: boolean,
 	 * udid: string, 
-	 * source: string, 
+	 * source: string,
+	 * network: boolean, 
 	 * changepw: { backup_password: string, newpw: string },
 	 * interactive: boolean
 	 * }} options 
@@ -193,7 +197,7 @@ exports.backup2 = {
 	},
 	/**
 	 * cloud –enable or disable cloud use (requires iCloud account)
-	 * @param {{ debug: boolean, udid: string, source: string, cloud: { enable: boolean }, interactive: boolean}} options 
+	 * @param {{ debug: boolean, udid: string, source: string, network: boolean, cloud: { enable: boolean }, interactive: boolean}} options 
 	 * @param {(error: string, files: string) => void} callback 
 	 * @param {(progress: string) => void} progress 
 	 */

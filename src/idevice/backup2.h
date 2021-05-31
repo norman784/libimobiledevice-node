@@ -46,6 +46,7 @@ struct idevice_backup2_options {
     bool debug;
     char *udid;
     char *source;
+    bool network;
     char *command;
     struct idevice_backup2_backup_options backup;
     struct idevice_backup2_restore_options restore;
@@ -57,7 +58,8 @@ struct idevice_backup2_options {
 } const default_idevice_backup2_options = {
     .debug = false, 
     .udid = NULL, 
-    .source  = NULL, 
+    .source  = NULL,
+    .network = false,
     .command = NULL, 
     .backup = { .full = false },
     .restore = {
