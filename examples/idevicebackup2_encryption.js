@@ -1,9 +1,10 @@
 const imobiledevice = require('../index');
 
-imobiledevice.backup2.encryption({ 
+imobiledevice.backup2.encryption({
+    debug: false,
     network: false,
-    encryption: {enable: false, password: '1234'}},
+    encryption: {enable: true, password: '1234'}},
     (error, data) => {
     if (error) { console.error('encryption error: ', error); }
-    else { console.log('encryption ', data) }
-}, () => {});
+    else { console.log('set: ', data); }
+}, (progress) => { console.log('put pin code? ', progress); });

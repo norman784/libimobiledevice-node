@@ -5,7 +5,7 @@ const backup_path = homedir + '/backuptemp/';
 
 imobiledevice.backup2.backup({
     debug: true,
-    network: true,
+    network: false,
     backup_directory: backup_path
 }, (error, data) => {
     if (error) { console.error('error: ', error); }

@@ -3,7 +3,7 @@ const { idevice_id, CannotRetrieveDeviceListError, CannotMallocMemoryError, Cann
 const { idevice_info, InfoInvalidDomainError, InfoUnkownError } = require('./lib/idevice_info');
 const { UnkownErrror, IdeviceNoDeviceFoundError, LockdownPasswordProtectedError, LockdownInvalidHostIdError, LockdownPairingDialongResponsoPendingError, LockdownUserDeniedPairingError, LockdownError } = require('./lib/errors');
 const { PairInvalidCommandError, PairUnkownError, idevice_pair, getPairParameters } = require('./lib/idevice_pair');
-const { idevice_backup2, getBackup2Parameters, BACKUP2_COMMANDS, Backup2Error } = require('./lib/idevice_backup2');
+const { idevice_backup2, getBackup2Parameters, BACKUP2_COMMANDS, Backup2Error, EncryptionDeviceLockedError, EncryptionInvalidPasswordError, EncryptionAlreadyEnabledError, EncryptionAlreadyDisabledError } = require('./lib/idevice_backup2');
 
 // Export errors
 exports.UnkownErrror = UnkownErrror;
@@ -26,10 +26,15 @@ exports.PairInvalidCommandError = PairInvalidCommandError;
 exports.PairUnkownError = PairUnkownError;
 // Backup errors
 exports.Backup2Error = Backup2Error;
+exports.EncryptionDeviceLockedError = EncryptionDeviceLockedError;
+exports.EncryptionInvalidPasswordError = EncryptionInvalidPasswordError;
+exports.EncryptionAlreadyEnabledError = EncryptionAlreadyEnabledError;
+exports.EncryptionAlreadyDisabledError = EncryptionAlreadyDisabledError;
+
 
 /**
  * Return device list found via usb and network.
- * @param {{debug: boolean, usblist: boolean, networklist: boolean}} [options]
+ * @param {{debug: booleanError, usblist: boolean, networklist: boolean}} [options]
  * @param {(error: (UnkownErrror | CannotRetrieveDeviceListError | CannotMallocMemoryError | CannotReallocMemoryError), idlist: {usblist: [string], networklist: [string]})} callback
  * 
  */
@@ -100,6 +105,8 @@ exports.pair = {
 		idevice_pair(pOptions, pCallback);
 	}
 }
+
+const parseBoolean = (value) => value === 'true';
 
 exports.backup2 = {
 	/**
@@ -174,12 +181,13 @@ exports.backup2 = {
 	 * encryption: { enable: boolean, password: string },
 	 * interactive: boolean
 	 * }} options encryption.enable flag must be set to true if you want to encrypt the device.
-	 * @param {(error: Backup2Error, result: { success: boolean, message: string }) => void} callback 
-	 * @param {(progress: string) => void} progress 
+	 * @param {(error: Backup2Error | EncryptionDeviceLockedError | EncryptionInvalidPasswordError | EncryptionAlreadyEnabledError | EncryptionAlreadyDisabledError,
+	 * result: { success: boolean, message: string }) => void} callback 
+	 * @param {(setPin: boolean) => void} progress 
 	 */
 	encryption: (options, callback, progress) => {
 		const { bOptions, bCallback, bProgress } = getBackup2Parameters(BACKUP2_COMMANDS.encryption, options, callback, progress);
-		idevice_backup2(bOptions, bCallback, bProgress);
+		idevice_backup2(bOptions, bCallback, (setPin) => bProgress(parseBoolean(setPin)));
 	},
 	/**
 	 * changePassword —change backup password on target device
@@ -190,11 +198,32 @@ exports.backup2 = {
 	 * changepw: { backup_password: string, newpw: string },
 	 * interactive: boolean
 	 * }} options 
-	 * @param {(error: Backup2Error, result: { success: boolean, message: string }) => void} callback 
-	 * @param {(progress: string) => void} progress 
+	 * @param {(error: Backup2Error | EncryptionDeviceLockedError | EncryptionInvalidPassword | EncryptionAlreadyDisabledError, result: { success: boolean, message: string }) => void} callback 
+	 * @param {(setPin: boolean) => void} progress 
 	 */
 	changePassword: (options, callback, progress) => {
 		const { bOptions, bCallback, bProgress } = getBackup2Parameters(BACKUP2_COMMANDS.changepw, options, callback, progress);
+		idevice_backup2(bOptions, bCallback, (setPin) => bProgress(parseBoolean(setPin)));
+	},
+	/**
+	 * checkPassword —check if an encryption password match with the one set in the device.
+	 * @param {{ debug: boolean,
+	 * udid: string, 
+	 * source: string,
+	 * network: boolean, 
+	 * backup_password: string,
+	 * }} options 
+	 * @param {(error: Backup2Error | EncryptionDeviceLockedError | EncryptionInvalidPasswordError | EncryptionAlreadyDisabledError, result: { success: boolean, message: string }) => void} callback 
+	 * @param {(setPin: boolean) => void} progress 
+	 */
+	checkPassword: (options, callback, progress) => {
+		let changepwOptions = {
+			udid: options?.udid,
+			source: options?.source,
+			network: options?.network,
+			changepw: { backup_password: options.backup_password, newpw: options.backup_password }
+		}
+		const { bOptions, bCallback, bProgress } = getBackup2Parameters(BACKUP2_COMMANDS.changepw, changepwOptions, callback, progress);
 		idevice_backup2(bOptions, bCallback, bProgress);
 	},
 	/**
