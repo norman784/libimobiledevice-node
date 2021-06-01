@@ -33,6 +33,7 @@
 #include <libimobiledevice/afc.h>
 #include <libimobiledevice/installation_proxy.h>
 #include <libimobiledevice/sbservices.h>
+#include <libimobiledevice/diagnostics_relay.h>
 #include "common/utils.h"
 
 #include "common/endianness.h"
@@ -1395,6 +1396,12 @@ static bool nearly_equal(double a, double b, double epsilon) {
 
 #define DEVICE_VERSION(maj, min, patch) (((maj & 0xFF) << 16) | ((min & 0xFF) << 8) | (patch & 0xFF))
 
+void put_device_passcode(node_progress_callback progress_callback, bool must_set_it) {
+    FILE *stream_progress = tmpfile();
+    fprintf(stream_progress, "%s", must_set_it ? "true" : "false");
+    progress_callback(stream_progress);
+}
+
 void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, FILE *stream_out, node_progress_callback progress_callback)
 {
     idevice_error_t ret = IDEVICE_E_UNKNOWN_ERROR;
@@ -1444,7 +1451,6 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
         }
         backup_directory = strdup(options.backup_directory);
     };
-    printf("options.backupdirectory: %s\n", options.backup_directory);
 
     if (!strcmp(command, "backup")) {
         cmd = CMD_BACKUP;
@@ -1898,22 +1904,22 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
                 opts = plist_new_dict();
                 plist_dict_set_item(opts, "RestoreSystemFiles", plist_new_bool(cmd_flags & CMD_FLAG_RESTORE_SYSTEM_FILES));
                 PRINT_VERBOSE(1, stream_out, "Restoring system files: %s\n", (cmd_flags & CMD_FLAG_RESTORE_SYSTEM_FILES ? "YES" : "NO"));
-                PRINT_VERBOSE_DEBUG(1, "Restoring system files: %s\n", (cmd_flags & CMD_FLAG_RESTORE_SYSTEM_FILES ?                                                                               "Yes":"No"));
+                PRINT_VERBOSE_DEBUG(1, "Restoring system files: %s\n", (cmd_flags & CMD_FLAG_RESTORE_SYSTEM_FILES ? "Yes":"No"));
                 if ((cmd_flags & CMD_FLAG_RESTORE_REBOOT) == 0)
                     plist_dict_set_item(opts, "RestoreShouldReboot", plist_new_bool(0));
                 PRINT_VERBOSE(1, stream_out, "Rebooting after restore: %s\n", (cmd_flags & CMD_FLAG_RESTORE_REBOOT ? "YES" : "NO"));
-                PRINT_VERBOSE_DEBUG(1, "Rebooting after restore: %s\n", (cmd_flags & CMD_FLAG_RESTORE_REBOOT ?                                                                                "Yes":"No"));
+                PRINT_VERBOSE_DEBUG(1, "Rebooting after restore: %s\n", (cmd_flags & CMD_FLAG_RESTORE_REBOOT ? "Yes":"No"));
                 if ((cmd_flags & CMD_FLAG_RESTORE_COPY_BACKUP) == 0)
                     plist_dict_set_item(opts, "RestoreDontCopyBackup", plist_new_bool(1));
                 PRINT_VERBOSE(1, stream_out, "Don't copy backup: %s\n", ((cmd_flags & CMD_FLAG_RESTORE_COPY_BACKUP) == 0 ? "YES" : "NO"));
-                PRINT_VERBOSE_DEBUG(1, "Don't copy backup: %s\n", ((cmd_flags & CMD_FLAG_RESTORE_COPY_BACKUP) ==                                                                          0 ? "Yes":"No"));
+                PRINT_VERBOSE_DEBUG(1, "Don't copy backup: %s\n", ((cmd_flags & CMD_FLAG_RESTORE_COPY_BACKUP) == 0 ? "Yes":"No"));
                 plist_dict_set_item(opts, "RestorePreserveSettings", plist_new_bool((cmd_flags & CMD_FLAG_RESTORE_SETTINGS) == 0));
                 PRINT_VERBOSE(1, stream_out, "Preserve settings of device: %s\n", ((cmd_flags & CMD_FLAG_RESTORE_SETTINGS) == 0 ? "YES" : "NO"));
-                PRINT_VERBOSE_DEBUG(1, "Preserve settings of device: %s\n", ((cmd_flags & CMD_FLAG_RESTORE_SETTINGS) ==                                                                                    0 ? "Yes":"No"));
+                PRINT_VERBOSE_DEBUG(1, "Preserve settings of device: %s\n", ((cmd_flags & CMD_FLAG_RESTORE_SETTINGS) == 0 ? "Yes":"No"));
                 if (cmd_flags & CMD_FLAG_RESTORE_REMOVE_ITEMS)
                     plist_dict_set_item(opts, "RemoveItemsNotRestored", plist_new_bool(1));
                 PRINT_VERBOSE(1, stream_out, "Remove items that are not restored: %s\n", ((cmd_flags & CMD_FLAG_RESTORE_REMOVE_ITEMS) ? "Yes":"No"));
-                PRINT_VERBOSE_DEBUG(1, "Remove items that are not restored: %s\n", ((cmd_flags &                                                                                            CMD_FLAG_RESTORE_REMOVE_ITEMS) ? "Yes":"No"));
+                PRINT_VERBOSE_DEBUG(1, "Remove items that are not restored: %s\n", ((cmd_flags & CMD_FLAG_RESTORE_REMOVE_ITEMS) ? "Yes":"No"));
                 if (backup_password != NULL) {
                     plist_dict_set_item(opts, "Password", plist_new_string(backup_password));
                 }
@@ -2043,6 +2049,38 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
                 }
                 if (newpw || backup_password) {
                     mobilebackup2_send_message(mobilebackup2, "ChangePassword", opts);
+                    uint8_t passcode_hint = 0;
+                    if (device_version >= DEVICE_VERSION(13,0,0)) {
+                        diagnostics_relay_client_t diag = NULL;
+                        if (diagnostics_relay_client_start_service(device, &diag, TOOL_NAME) == DIAGNOSTICS_RELAY_E_SUCCESS) {
+                            plist_t dict = NULL;
+                            plist_t keys = plist_new_array();
+                            plist_array_append_item(keys, plist_new_string("PasswordConfigured"));
+                            if (diagnostics_relay_query_mobilegestalt(diag, keys, &dict) == DIAGNOSTICS_RELAY_E_SUCCESS) {
+                                plist_t node = plist_access_path(dict, 2, "MobileGestalt", "PasswordConfigured");
+                                plist_get_bool_val(node, &passcode_hint);
+                            }
+                            plist_free(keys);
+                            plist_free(dict);
+                            diagnostics_relay_goodbye(diag);
+                            diagnostics_relay_client_free(diag);
+                        }
+                    }
+                    if (passcode_hint) {
+                        if (cmd_flags & CMD_FLAG_ENCRYPTION_CHANGEPW) {
+                            PRINT_VERBOSE(1, stream_out,"Please confirm changing the backup password by entering the passcode on the device.\n");
+                            PRINT_VERBOSE_DEBUG(1, "Please confirm changing the backup password by entering the passcode on the device.\n");
+                            put_device_passcode(progress_callback, true);
+                        } else if (cmd_flags & CMD_FLAG_ENCRYPTION_ENABLE) {
+                            PRINT_VERBOSE(1, stream_out,"Please confirm enabling the backup encryption by entering the passcode on the device.\n");
+                            PRINT_VERBOSE_DEBUG(1, "Please confirm enabling the backup encryption by entering the passcode on the device.\n");
+                            put_device_passcode(progress_callback, true);
+                        } else if (cmd_flags & CMD_FLAG_ENCRYPTION_DISABLE) {
+                            PRINT_VERBOSE(1, stream_out,"Please confirm disabling the backup encryption by entering the passcode on the device.\n");
+                            PRINT_VERBOSE_DEBUG(1, "Please confirm disabling the backup encryption by entering the passcode on the device.\n");
+                            put_device_passcode(progress_callback, true);
+                        }
+				    }
                 } else {
                     cmd = CMD_LEAVE;
                 }

@@ -1,9 +1,9 @@
 const { stubChildOn, initStubs, initSpies } = require("./helpers");
-const { backup2 } = require('../index');
+const { backup2, Backup2Error, EncryptionDeviceLockedError, EncryptionInvalidPasswordError, EncryptionAlreadyEnabledError, EncryptionAlreadyDisabledError } = require('../index');
 const { expect } = require("chai");
 const cp = require('child_process');
 const { match } = require("sinon");
-const { getDefaultOptions, BACKUP2_COMMANDS, Backup2Error } = require("../lib/idevice_backup2");
+const { getDefaultOptions, BACKUP2_COMMANDS, ENCRYPTION_ERROR_STRINGS } = require("../lib/idevice_backup2");
 
 describe('idevice_backup2 tests', () => {
     const path = 'Users/homedir';
@@ -78,6 +78,13 @@ describe('idevice_backup2 tests', () => {
         backup2.changePassword(options, () => { expect(spySend.calledWith(match(expectedOptions))).to.equal(true); }, progress);
     });
 
+    it('id.backup2.checkPassword must be called with changepw command', () => {
+        let options = { backup_password: '1234' };
+        let expectedOptions = getDefaultOptions(BACKUP2_COMMANDS.changepw, {changepw: {backup_password: '1234', newpw: '1234'}});
+        spies.child.fork.returns(stubFork(spies));
+        backup2.checkPassword(options, () => { expect(spySend.calledWith(match(expectedOptions))).to.equal(true); }, progress);
+    });
+
     it('id.backup2.cloud must be called with cloud command', () => {
         let options = { cloud: { enable: true } };
         let expectedOptions = getDefaultOptions(BACKUP2_COMMANDS.cloud, options);
@@ -111,11 +118,66 @@ describe('idevice_backup2 tests', () => {
 
     it('id.backup2.backup should fail with Backup2Error', () => {
         let options = { backup_directory: path };
-        let message = 'SUCCESS';
         spies.child.fork.returns(stubFork(spies, 'ERROR: BACKUP', null, null));
         backup2.backup(options, (error, result) => {
             expect(result).to.be.null;
             expect(error).to.be.instanceOf(Backup2Error);
+        }, () => {});
+    });
+
+    it('id.backup2.encryption porgress must return a boolean', () => {
+        let options = { encryption: { enable: true, password: '1234' } };
+        let expectedOptions = getDefaultOptions(BACKUP2_COMMANDS.encryption, options);
+        spies.child.fork.returns(stubFork(spies, null, null, progress('true')));
+        backup2.encryption(options, (error, result) => {}, 
+        (setPin) => {
+            expect(setPin).to.be.true;
+        });
+    });
+
+    it('id.backup2.checkPassword porgress must return a boolean', () => {
+        let options = { encryption: { enable: true, password: '1234' } };
+        let expectedOptions = getDefaultOptions(BACKUP2_COMMANDS.encryption, options);
+        spies.child.fork.returns(stubFork(spies, null, null, progress('true')));
+        backup2.encryption(options, (error, result) => {}, 
+        (setPin) => {
+            expect(setPin).to.be.true;
+        });
+    });
+
+    it('id.backup2.encryption should fail with DeviceLockedError', () => {
+        let options = { backup_directory: path };
+        spies.child.fork.returns(stubFork(spies, 'error - Device locked (MBErrorDomain/208)', null, null));
+        backup2.encryption(options, (error, result) => {
+            expect(result).to.be.null;
+            expect(error).to.be.instanceOf(EncryptionDeviceLockedError);
+        }, () => {});
+    });
+
+    it('id.backup2.encryption should fail with Invalid password error', () => {
+        let options = { backup_directory: path };
+        spies.child.fork.returns(stubFork(spies, 'error - Invalid password (MBErrorDomain/207)', null, null));
+        backup2.encryption(options, (error, result) => {
+            expect(result).to.be.null;
+            expect(error).to.be.instanceOf(EncryptionInvalidPasswordError);
+        }, () => {});
+    });
+
+    it('id.backup2.encryption should fail with already enabled error', () => {
+        let options = { backup_directory: path };
+        spies.child.fork.returns(stubFork(spies, 'error ' + ENCRYPTION_ERROR_STRINGS.ALREADY_ENABLED, null, null));
+        backup2.encryption(options, (error, result) => {
+            expect(result).to.be.null;
+            expect(error).to.be.instanceOf(EncryptionAlreadyEnabledError);
+        }, () => {});
+    });
+
+    it('id.backup2.encryption should fail with already disabled error', () => {
+        let options = { backup_directory: path };
+        spies.child.fork.returns(stubFork(spies, 'error - ' + ENCRYPTION_ERROR_STRINGS.ALREADY_DISABLED, null, null));
+        backup2.encryption(options, (error, result) => {
+            expect(result).to.be.null;
+            expect(error).to.be.instanceOf(EncryptionAlreadyDisabledError);
         }, () => {});
     });
     
