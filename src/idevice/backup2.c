@@ -17,7 +17,6 @@
 #ifdef WIN32
     #define STDIN_FILENO 0
     #include "common/dirent.h"
-    //#include "common/libgen.h"
 #else
     #include <unistd.h>
     #include <dirent.h>
@@ -93,6 +92,10 @@ enum cmd_flags {
 };
 
 static int backup_domain_changed = 0;
+
+void command_run_successfully(FILE *stream_out) {
+    fprintf(stream_out, "SUCCESS");
+}
 
 static void notify_cb(const char *notification, void *userdata)
 {
@@ -1685,7 +1688,7 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
     }
     
     afc_client_t afc = NULL;
-    if (cmd == CMD_BACKUP || cmd == CMD_RESTORE) {
+    if (cmd == CMD_BACKUP || cmd == CMD_RESTORE) {
         /* start AFC, we need this for the lock file */
         service->port = 0;
         service->ssl_enabled = 0;
@@ -1916,6 +1919,21 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
                 }
                 PRINT_VERBOSE(1, stream_out, "Backup password: %s\n", (backup_password == NULL ? "No":"Yes"));
                 PRINT_VERBOSE_DEBUG(1, "Backup password: %s\n", (backup_password == NULL ? "No":"Yes"));
+
+                if (cmd_flags & CMD_FLAG_RESTORE_SKIP_APPS) {
+                    PRINT_VERBOSE(1, stream_out, "Not writing RestoreApplications.plist - apps will not be re-installed after restore\n");
+                    PRINT_VERBOSE_DEBUG(1, "Not writing RestoreApplications.plist - apps will not be re-installed after restore\n");
+                } else {
+                    /* Write /iTunesRestore/RestoreApplications.plist so that the device will start
+                    * restoring applications once the rest of the restore process is finished */
+                    if (write_restore_applications(info_plist, afc) < 0) {
+                        cmd = CMD_LEAVE;
+                        break;
+                    } else {
+                        PRINT_VERBOSE(1, stream_out, "Wrote RestoreApplications.plist\n");
+                        PRINT_VERBOSE_DEBUG(1, "Wrote RestoreApplications.plist\n");
+                    }
+                }
                 
                 err = mobilebackup2_send_request(mobilebackup2, "Restore", udid, source_udid, opts);
                 plist_free(opts);
@@ -2285,8 +2303,7 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
                         progress_finished = 1;
                     }
                     FILE *stream_progress = tmpfile();
-                    print_progress_real(stream_progress, overall_progress, 0);
-                    fprintf(stream_progress, " Finished\n");
+                    fprintf(stream_progress, "%.2f", overall_progress);
                     previous_overall_progress = overall_progress;
                     progress_callback(stream_progress);
                 }
@@ -2340,6 +2357,7 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
                     if (operation_ok && mb2_status_check_snapshot_state(backup_directory, udid, "finished")) {
                         PRINT_VERBOSE(1, stream_out, "Backup Successful.\n");
                         PRINT_VERBOSE_DEBUG(1, "Backup Successful.\n");
+                        command_run_successfully(stream_out);
                     } else {
                         if (quit_flag) {
                             PRINT_VERBOSE(1, stream_out, "Backup Aborted.\n");
@@ -2359,6 +2377,7 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
                         PRINT_VERBOSE_DEBUG(1, "The files can now be found in the \"_unback_\" directory.\n");
                         PRINT_VERBOSE(1, stream_out, "Unback Successful.\n");
                         PRINT_VERBOSE_DEBUG(1, "Unback Successful.\n");
+                        command_run_successfully(stream_out);
                     }
                     break;
                 case CMD_CHANGEPW:
@@ -2366,6 +2385,7 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
                         if (operation_ok) {
                             PRINT_VERBOSE(1, stream_out, "Backup encryption has been enabled successfully.\n");
                             PRINT_VERBOSE_DEBUG(1, "Backup encryption has been enabled successfully.\n");
+                            command_run_successfully(stream_out);
                         } else {
                             PRINT_VERBOSE(1, stream_out, "Could not enable backup encryption.\n");
                             PRINT_VERBOSE_DEBUG(1, "Could not enable backup encryption.\n");
@@ -2374,6 +2394,7 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
                         if (operation_ok) {
                             PRINT_VERBOSE(1, stream_out, "Backup encryption has been disabled successfully.\n");
                             PRINT_VERBOSE_DEBUG(1, "Backup encryption has been disabled successfully.\n");
+                            command_run_successfully(stream_out);
                         } else {
                             PRINT_VERBOSE(1, stream_out, "Could not disable backup encryption.\n");
                             PRINT_VERBOSE_DEBUG(1, "Could not disable backup encryption.\n");
@@ -2382,6 +2403,7 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
                         if (operation_ok) {
                             PRINT_VERBOSE(1, stream_out, "Backup encryption password has been changed successfully.\n");
                             PRINT_VERBOSE_DEBUG(1, "Backup encryption password has been changed successfully.\n");
+                            command_run_successfully(stream_out);
                         } else {
                             PRINT_VERBOSE(1, stream_out, "Could not change backup encryption password.\n");
                             PRINT_VERBOSE_DEBUG(1, "Could not change backup encryption password.\n");
@@ -2395,6 +2417,7 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
                     if (operation_ok) {
                         PRINT_VERBOSE(1, stream_out, "Restore Successful.\n");
                         PRINT_VERBOSE_DEBUG(1, "Restore Successful.\n");
+                        command_run_successfully(stream_out);
                     } else {
                         PRINT_VERBOSE(1, stream_out, "Restore Failed (Error Code %d).\n", -result_code);
                         PRINT_VERBOSE_DEBUG(1, "Restore Failed (Error Code %d).\n", -result_code);
@@ -2413,6 +2436,7 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
                     } else {
                         PRINT_VERBOSE(1, stream_out, "Operation Successful.\n");
                         PRINT_VERBOSE_DEBUG(1, "Operation Successful.\n");
+                        command_run_successfully(stream_out);
                     }
                     break;
             }
