@@ -2467,10 +2467,5 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
         free(source_udid);
         source_udid = NULL;
     }
-
-    if(backup_directory) {
-        free(backup_directory);
-        backup_directory = NULL;
-    }
 }
 
