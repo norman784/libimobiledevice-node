@@ -18,7 +18,7 @@ export libusbmuxd_check_file="${install_dir}/lib/libusbmuxd*.la"
 export libimobiledevice_url="https://github.com/libimobiledevice/libimobiledevice.git"
 export libimobiledevice_dir="libimobiledevice"
 export libimobiledevice_check_file="${install_dir}/lib/libimobiledevice*.la"
-LIBIMOBILE_VERSION="master"
+LIBIMOBILE_VERSION="ca324155f8b33babf907704828c7903608db0aa2"
 
 mkdir $tmp_dir
 cd $tmp_path
@@ -136,7 +136,7 @@ fi
 cd $root_path
 rm -rf $tmp_dir
 # remove binaries, we don't need them
-# rm -rf $install_dir/bin
+rm -rf $install_dir/bin
 
 if [ "$(uname -s)" == "Darwin" ]; then
 	echo ""
@@ -144,9 +144,9 @@ if [ "$(uname -s)" == "Darwin" ]; then
 	echo "-------------------------------------------"
 
 	echo "[✔] libimobiledevice-1.0.6.dylib"
-	install_name_tool -change $install_dir/lib/libusbmuxd.6.dylib @loader_path/libusbmuxd.6.dylib $install_dir/lib/libimobiledevice-1.0.6.dylib
+	install_name_tool -change $install_dir/lib/libusbmuxd-2.0.6.dylib @loader_path/libusbmuxd-2.0.6.dylib $install_dir/lib/libimobiledevice-1.0.6.dylib
 	install_name_tool -change $install_dir/lib/libplist-2.0.3.dylib @loader_path/libplist-2.0.3.dylib $install_dir/lib/libimobiledevice-1.0.6.dylib
 
-	echo "[✔] libusbmuxd.6.dylib"
-	install_name_tool -change $install_dir/lib/libplist-2.0.3.dylib @loader_path/libplist-2.0.3.dylib $install_dir/lib/libusbmuxd.6.dylib
+	echo "[✔] libusbmuxd-2.0.6.dylib"
+	install_name_tool -change $install_dir/lib/libplist-2.0.3.dylib @loader_path/libplist-2.0.3.dylib $install_dir/lib/libusbmuxd-2.0.6.dylib
 fi
