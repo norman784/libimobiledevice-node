@@ -34,11 +34,13 @@
               "include_dirs": [
                 "dependencies/include"
               ],
-              "libraries": [
-                "<(module_root_dir)/dependencies/lib/libplist-2.0.3.dylib",
-                "<(module_root_dir)/dependencies/lib/libusbmuxd-2.0.6.dylib",
-                "<(module_root_dir)/dependencies/lib/libimobiledevice-1.0.6.dylib"
-              ]
+              "link_settings": {
+                "libraries": [
+                  "<(module_root_dir)/dependencies/lib/libplist-2.0.3.dylib",
+                  "<(module_root_dir)/dependencies/lib/libusbmuxd-2.0.6.dylib",
+                  "<(module_root_dir)/dependencies/lib/libimobiledevice-1.0.6.dylib"
+                ]
+              }
             }
           ],
           ['OS=="win"',
@@ -65,6 +67,27 @@
             }
           ]
         ]
-      }
+      },
+      {
+      'target_name': 'action_after_build',
+      'type': 'none',
+      'dependencies': [ 'imobiledevice' ],
+      'hard_dependency': 1,
+      'conditions': [
+        ['OS!="win"',
+          {
+            'actions': [
+              {
+                'action_name': 'postinstall',
+                'inputs': ['./postinstall.sh'],
+                'outputs': [''],
+                'action': ['./postinstall.sh']
+              }
+            ]
+          }
+        ]
+      ]
+    },
+
   ]
 }

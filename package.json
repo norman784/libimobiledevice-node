@@ -12,13 +12,13 @@
     "shelljs": "^0.8.3"
   },
   "scripts": {
-    "preinstall": "node preinstall.js",
-    "install": "node install.js",
+    "install": "sh install.sh",
+    "postinstall": "node-gyp rebuild",
     "preinstall-win": "preinstall.cmd",
     "install-win": "install.cmd && node-gyp rebuild && postinstall.cmd",
     "test": "mocha",
     "test:native": "node test/test_imobiledevice_call.js",
-    "compile": "node-gyp rebuild && sh postinstall.sh",
+    "compile": "node-gyp rebuild",
     "compile-win": "node-gyp rebuild && postinstall.cmd",
     "build": "node-gyp build",
     "xcode": "node-gyp configure -- -f xcode"
