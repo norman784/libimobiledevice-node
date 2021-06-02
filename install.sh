@@ -143,9 +143,15 @@ if [ "$(uname -s)" == "Darwin" ]; then
 	echo "Change absolute path to relative path"
 	echo "-------------------------------------------"
 
+	echo "[✔] libssl.1.1.dylib"
+	install_name_tool -change $install_dir/lib/libcrypto.1.1.dylib @loader_path/libcrypto.1.1.dylib $install_dir/lib/libssl.1.1.dylib
+
 	echo "[✔] libimobiledevice-1.0.6.dylib"
 	install_name_tool -change $install_dir/lib/libusbmuxd-2.0.6.dylib @loader_path/libusbmuxd-2.0.6.dylib $install_dir/lib/libimobiledevice-1.0.6.dylib
 	install_name_tool -change $install_dir/lib/libplist-2.0.3.dylib @loader_path/libplist-2.0.3.dylib $install_dir/lib/libimobiledevice-1.0.6.dylib
+	install_name_tool -change $install_dir/lib/libssl.1.1.dylib @loader_path/libssl.1.1.dylib $install_dir/lib/libimobiledevice-1.0.6.dylib
+	install_name_tool -change $install_dir/lib/libcrypto.1.1.dylib @loader_path/libcrypto.1.1.dylib $install_dir/lib/libimobiledevice-1.0.6.dylib
+	
 
 	echo "[✔] libusbmuxd-2.0.6.dylib"
 	install_name_tool -change $install_dir/lib/libplist-2.0.3.dylib @loader_path/libplist-2.0.3.dylib $install_dir/lib/libusbmuxd-2.0.6.dylib
