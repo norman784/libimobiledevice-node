@@ -157,6 +157,8 @@ xcuserdata/
 !*.xcworkspace/contents.xcworkspacedata
 /*.gcno
 
+## Python
+scripts/__pycache__/*
 
 # End of https://www.gitignore.io/api/c++,node,macos,xcode
 

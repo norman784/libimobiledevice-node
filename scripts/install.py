@@ -1,19 +1,24 @@
 #!/usr/bin/env python
 from __future__ import unicode_literals
 import os
-import subprocess
 import re
 import glob
 import shutil
 import json
 
+from shell import uname, shell, make
+from artifact import Artifact
+
 def get_relative_path(path: str) -> str:
     dirname = os.path.dirname(__file__)
     return os.path.join(dirname, path)
 
+
+DEPENDENCIES_FILE = get_relative_path('dependencies.json')
+
+
 def get_dependencies():
-    dependencies_file = get_relative_path('dependencies.json')
-    with open(dependencies_file) as file:
+    with open(DEPENDENCIES_FILE) as file:
         return json.loads(file.read())['dependencies']
 
 
@@ -35,6 +40,7 @@ for dependency in get_dependencies():
 ROOT_PATH = os.getcwd()
 INSTALL_DIR = f'{ROOT_PATH}/dependencies'
 TMP_PATH = f'{ROOT_PATH}/tmp'
+LIBIMOBILEDEVICE_NODE_ARTIFACT = 'libimobiledevice-node-artifact'
 
 OPENSSL_URL = _openssl['url']
 OPENSSL_CHECK_FILE = f'{INSTALL_DIR}/include/openssl/opensslv.h'
@@ -64,24 +70,9 @@ def get_install_successfully(name: str) -> str:
     """
 
 
-def shell(command: str, cwd: str = None, check=True, env = None, executable=None):
-    subprocess.run(command, cwd=cwd, shell=True, check=check, env=env, executable=executable)
-
-
-def make(arg: str = None, cwd: str = None, env = None):
-    if arg:
-        shell(f'make {arg}', cwd=cwd, env=env)
-    else:
-        shell('make', cwd=cwd, env=env)
-
-
 def exit_with_error(error: str):
     print(error)
     exit(1)
-
-
-def uname(option: str):
-    return subprocess.run(["uname", option], capture_output=True, text=True).stdout.strip()
 
 
 def configure_openssl(prefix:str, arch: str, openssl_dir: str = None) -> str:
@@ -197,27 +188,40 @@ def change_dylib_path_to_relative():
     for library in [libssl, libcrypto, libplist, libusbmuxd]:
         install_name_tool('-change', library, libimobiledevice)
 
+# RUN SCRIPT
+if __name__ == "__main__":
+    artifact = Artifact(bucket_name='ios-native-qustodio-dev')
 
-# Main
-if not os.path.isdir(TMP_PATH):
-    os.mkdir(TMP_PATH)
+    dependencies_hash = artifact.get_hash_from(file_content=DEPENDENCIES_FILE)
+    artifact_name = f'{dependencies_hash}.zip'
 
-# Install Openssl
-install_openssl_ifneeded()
+    print('depenencies hash: ', dependencies_hash)
+    print('ROOT_PATH: ', ROOT_PATH)
 
-# Install libimobledevice tools and library
-install_lib_ifneeded('libplist', LIBPLIST_URL, LIBPLIST_COMMIT)
-install_lib_ifneeded('libusbmuxd', LIBUSBMUXD_URL, LIBUSBMUXD_COMMIT, is_pkg_config=True)
-install_lib_ifneeded('libimobiledevice', LIBIMOBILEDEVICE_URL, LIBIMOBILEDEVICE_COMMIT, is_pkg_config=True, is_ld_library=True, is_cdpath=True)
+    if not os.path.isdir(INSTALL_DIR):
+        if artifact.try_download_and_unzip_artifact(artifact_name, LIBIMOBILEDEVICE_NODE_ARTIFACT, unzip_path=get_relative_path('../')):
+            exit(0)
+        
+        print("🛠 Don't worry building it for you...")
+        os.mkdir(TMP_PATH)
 
-if os.path.isdir(TMP_PATH):
-    shutil.rmtree(TMP_PATH)
+    # Install Openssl
+    install_openssl_ifneeded()
 
-if os.path.isdir(f'{INSTALL_DIR}/bin'):
-    if uname('-s').find('MINGW') > -1:
-        shell("cp dependencies/bin/*.dll dependencies/lib")
-    shutil.rmtree(f'{INSTALL_DIR}/bin')
+    # Install libimobledevice tools and library
+    install_lib_ifneeded('libplist', LIBPLIST_URL, LIBPLIST_COMMIT)
+    install_lib_ifneeded('libusbmuxd', LIBUSBMUXD_URL, LIBUSBMUXD_COMMIT, is_pkg_config=True)
+    install_lib_ifneeded('libimobiledevice', LIBIMOBILEDEVICE_URL, LIBIMOBILEDEVICE_COMMIT, is_pkg_config=True, is_ld_library=True, is_cdpath=True)
 
-if uname('-s') == "Darwin":
-    change_dylib_path_to_relative()
+    if os.path.isdir(TMP_PATH):
+        shutil.rmtree(TMP_PATH)
 
+    if os.path.isdir(f'{INSTALL_DIR}/bin'):
+        if uname('-s').find('MINGW') > -1:
+            shell("cp dependencies/bin/*.dll dependencies/lib")
+        shutil.rmtree(f'{INSTALL_DIR}/bin')
+
+    if uname('-s') == "Darwin":
+        change_dylib_path_to_relative()
+
+    artifact.try_zip_and_upload_artifact(INSTALL_DIR, artifact_name, LIBIMOBILEDEVICE_NODE_ARTIFACT)
