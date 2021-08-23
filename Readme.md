@@ -108,3 +108,24 @@ Run any of the examples in the path [examples](./examples):
 ```bash
 node examples/idevice_id
 ```
+
+
+## Windows (WIP)
+
+**IMPORTANT:** Windows native compilation isn't longer available because libmobile libraries has changed to the oficial ones again.
+
+### Build
+
+The following requeriments are needed:
+
+- Install msys2
+- pacman -S base-devel
+- pacman -S git
+- pacman -S  mingw-w64-x86_64-gcc or mingw-w64-i686-gcc for win32.
+- pacman -S make
+- pacman -S libtool
+- pacman -S autoconf
+- pacman -S automake-wrapper
+
+Finally run: `./scripts/install.py`.
+

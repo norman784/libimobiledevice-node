@@ -1,0 +1,25 @@
+
+{
+    "dependencies": [
+        {
+            "name": "openssl", 
+            "url": "https://www.openssl.org/source/openssl-1.1.1k.tar.gz",
+            "commit": ""
+        },
+        {
+            "name": "libplist", 
+            "url": "https://github.com/libimobiledevice/libplist.git",
+            "commit": "feb0bcd"
+        },
+        {
+            "name": "libusbmuxd", 
+            "url": "https://github.com/libimobiledevice/libusbmuxd.git",
+            "commit": "e32bf76"
+        },
+        {
+            "name": "libimobiledevice", 
+            "url": "https://github.com/libimobiledevice/libimobiledevice.git",
+            "commit": "ca324155f8b33babf907704828c7903608db0aa2"
+        }
+    ]
+}

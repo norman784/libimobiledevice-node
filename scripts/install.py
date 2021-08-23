@@ -1,27 +1,52 @@
 #!/usr/bin/env python
 from __future__ import unicode_literals
 import os
-from posix import environ
 import subprocess
 import re
 import glob
 import shutil
+import json
+
+def get_relative_path(path: str) -> str:
+    dirname = os.path.dirname(__file__)
+    return os.path.join(dirname, path)
+
+def get_dependencies():
+    dependencies_file = get_relative_path('dependencies.json')
+    with open(dependencies_file) as file:
+        return json.loads(file.read())['dependencies']
+
+
+_openssl = None
+_libplist = None
+_libusbmuxd = None
+_libimobiledevice = None
+
+for dependency in get_dependencies():
+    if dependency['name'] == 'openssl':
+        _openssl = dependency
+    if dependency['name'] == 'libplist':
+        _libplist = dependency
+    if dependency['name'] == 'libusbmuxd':
+        _libusbmuxd = dependency
+    if dependency['name'] == 'libimobiledevice':
+        _libimobiledevice = dependency
 
 ROOT_PATH = os.getcwd()
 INSTALL_DIR = f'{ROOT_PATH}/dependencies'
 TMP_PATH = f'{ROOT_PATH}/tmp'
 
-OPENSSL_URL =' https://www.openssl.org/source/openssl-1.1.1k.tar.gz'
+OPENSSL_URL = _openssl['url']
 OPENSSL_CHECK_FILE = f'{INSTALL_DIR}/include/openssl/opensslv.h'
 
-LIBPLIST_URL = 'https://github.com/libimobiledevice/libplist.git'
-LIBPLIST_COMMIT = 'feb0bcd'
+LIBPLIST_URL = _libplist['url']
+LIBPLIST_COMMIT = _libplist['commit']
 
-LIBUSBMUXD_URL = 'https://github.com/libimobiledevice/libusbmuxd.git'
-LIBUSBMUXD_COMMIT = 'e32bf76'
+LIBUSBMUXD_URL = _libusbmuxd['url']
+LIBUSBMUXD_COMMIT = _libusbmuxd['commit']
 
-LIBIMOBILEDEVICE_URL = 'https://github.com/libimobiledevice/libimobiledevice.git'
-LIBIMOBILEDEVICE_COMMIT = 'ca324155f8b33babf907704828c7903608db0aa2'
+LIBIMOBILEDEVICE_URL = _libimobiledevice['url']
+LIBIMOBILEDEVICE_COMMIT = _libimobiledevice['commit']
 
 
 def get_title(name: str) -> str:
@@ -39,8 +64,8 @@ def get_install_successfully(name: str) -> str:
     """
 
 
-def shell(command: str, cwd: str = None, check=True, env = None):
-    subprocess.run(command, cwd=cwd, shell=True, check=check, env=env)
+def shell(command: str, cwd: str = None, check=True, env = None, executable=None):
+    subprocess.run(command, cwd=cwd, shell=True, check=check, env=env, executable=executable)
 
 
 def make(arg: str = None, cwd: str = None, env = None):
@@ -63,7 +88,7 @@ def configure_openssl(prefix:str, arch: str, openssl_dir: str = None) -> str:
     if openssl_dir:
         return f"./Configure --prefix={prefix} --openssldir={openssl_dir} {arch}"
     else:
-        return f"./Configure --prefix={prefix} {arch}"
+        return f'./Configure --prefix={prefix} {arch}'
 
 
 def get_openssl_configuration() -> str:
@@ -79,8 +104,9 @@ def get_openssl_configuration() -> str:
             return configure_openssl(prefix=INSTALL_DIR, arch='darwin64-arm64-cc')
         else:
             exit_with_error('\n\n ------- Invalid architecture found  ------- \n\n')
-    elif operating_system.find('CYGWIN') > -1:
-        exit_with_error('\n\n ------- Openssl CYGWIN configuration not defined yet  ------- \n\n')
+    elif operating_system.find('MINGW64') > -1 or operating_system.find('MSYS') > -1:
+        print('\n\n ------- Compiling Windows MINGW ------- \n\n')
+        return configure_openssl(prefix=INSTALL_DIR, arch='mingw64')
     else:
         exit_with_error('\n\n ------- No suitable compiler has been found  ------- \n\n')
 
@@ -95,6 +121,7 @@ def install_openssl_ifneeded():
     openssl_dir = f"{TMP_PATH}/{openssl_tar_file.replace('.tar.gz', '').strip()}"
     shell(f'curl -OL {OPENSSL_URL}', cwd=TMP_PATH)
     shell(f'tar xvzf {openssl_tar_file}', cwd=TMP_PATH)
+
     shell(get_openssl_configuration(), cwd=openssl_dir)
 
     make(cwd=openssl_dir)
@@ -105,14 +132,15 @@ def install_openssl_ifneeded():
 
 def install_lib_ifneeded(name: str, url: str, commit: str, is_pkg_config: bool = False, is_ld_library: bool = False, is_cdpath: bool = False):
     
-    if glob.glob(f'{INSTALL_DIR}/lib/{name}-*.dylib'):
+    if glob.glob(f'{INSTALL_DIR}/lib/{name}-*'):
         return
 
     print(get_title(name))
     lib_dir = f'{TMP_PATH}/{name}'
 
-    shell(f'git clone {url} {name}', cwd=TMP_PATH)
-    shell(f'git checkout {commit}', cwd=lib_dir)
+    if not os.path.isdir(f'{TMP_PATH}/{name}'):
+        shell(f'git clone {url} {name}', cwd=TMP_PATH)
+        shell(f'git checkout {commit}', cwd=lib_dir)
 
     environment = os.environ.copy()
     if is_pkg_config:
@@ -122,11 +150,16 @@ def install_lib_ifneeded(name: str, url: str, commit: str, is_pkg_config: bool =
     if is_cdpath:
         environment['CPATH'] = f'{INSTALL_DIR}/include/openssl'
 
-    # for some reason the first time it set the libtool folter to ../.. instead of .
-    # so running a second time the issue its fixed
-    shell('./autogen.sh', cwd=lib_dir, check=False, env=environment)
-    shell('./autogen.sh', cwd=lib_dir, env=environment)
-    shell(f'./configure --prefix={INSTALL_DIR} --without-cython', cwd=lib_dir, env=environment)
+    operating_system = uname('-s')
+    if operating_system == 'Darwin':
+        # For some reason the first time it set the libtool folter to ../.. instead of .
+        # so running a second time the issue its fixed
+        shell('./autogen.sh', cwd=lib_dir, check=False, env=environment)
+        shell('./autogen.sh', cwd=lib_dir, env=environment)
+        shell(f'./configure --prefix={INSTALL_DIR} --without-cython', cwd=lib_dir, env=environment)
+    elif operating_system.find('MINGW') > -1:
+        shell(f'./autogen.sh CC=gcc CXX=g++ --prefix={INSTALL_DIR} --without-cython', cwd=lib_dir, env=environment)
+
     make(cwd=lib_dir, env=environment)
     make('install', cwd=lib_dir, env=environment)
 
@@ -181,6 +214,8 @@ if os.path.isdir(TMP_PATH):
     shutil.rmtree(TMP_PATH)
 
 if os.path.isdir(f'{INSTALL_DIR}/bin'):
+    if uname('-s').find('MINGW') > -1:
+        shell("cp dependencies/bin/*.dll dependencies/lib")
     shutil.rmtree(f'{INSTALL_DIR}/bin')
 
 if uname('-s') == "Darwin":
