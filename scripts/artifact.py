@@ -2,6 +2,7 @@ import boto3
 import hashlib
 import zipfile
 import os
+import platform
 
 from shell import uname
 
@@ -35,13 +36,13 @@ class Artifact:
         with open(file_content, 'r') as file:
             hashmap = hashlib.md5(file.read().encode()).hexdigest()
         
-        operating_system = uname('-s')
-        if operating_system.find('MINGW64') > -1:
+        operating_system = platform.system()
+        if operating_system.find('MINGW64') > -1 or operating_system == 'Windows':
             return f'win64-{hashmap}'
         elif operating_system.find('MINGW32') > -1:
             return f'win32-{hashmap}'
         elif operating_system == 'Darwin':
-            arch = uname('-m')
+            arch = platform.machine()
             return f'mac-{arch}-{hashmap}'
         
         return ''

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import unicode_literals
 import os
+import platform
 import re
 import glob
 import shutil
@@ -49,6 +50,7 @@ LIBUSBMUXD_COMMIT = _libusbmuxd['commit']
 
 LIBIMOBILEDEVICE_URL = _libimobiledevice['url']
 LIBIMOBILEDEVICE_COMMIT = _libimobiledevice['commit']
+OPERATING_SYSTEM = platform.system()
 
 
 def get_title(name: str) -> str:
@@ -79,10 +81,10 @@ def configure_openssl(prefix:str, arch: str, openssl_dir: str = None) -> str:
 
 
 def get_openssl_configuration() -> str:
-    operating_system = uname('-s')
+    operating_system = OPERATING_SYSTEM
 
     if operating_system == 'Darwin':
-        arch = uname('-m')
+        arch = platform.machine()
         if arch == 'x86_64':
             print('\n\n ------- Compiling Openssl with Darwin Intel ------- \n\n')
             return configure_openssl(prefix=INSTALL_DIR, openssl_dir=f'{INSTALL_DIR}/openssl', arch='darwin64-x86_64-cc')
@@ -137,7 +139,7 @@ def install_lib_ifneeded(name: str, url: str, commit: str, is_pkg_config: bool =
     if is_cdpath:
         environment['CPATH'] = f'{INSTALL_DIR}/include/openssl'
 
-    operating_system = uname('-s')
+    operating_system = OPERATING_SYSTEM
     if operating_system == 'Darwin':
         # For some reason the first time it set the libtool folter to ../.. instead of .
         # so running a second time the issue its fixed
@@ -220,11 +222,11 @@ if __name__ == "__main__":
         shutil.rmtree(TMP_PATH)
 
     if os.path.isdir(f'{INSTALL_DIR}/bin'):
-        if uname('-s').find('MINGW') > -1:
+        if OPERATING_SYSTEM.find('MINGW') > -1:
             shell("cp dependencies/bin/*.dll dependencies/lib")
         shutil.rmtree(f'{INSTALL_DIR}/bin')
 
-    if uname('-s') == "Darwin":
+    if OPERATING_SYSTEM == "Darwin":
         change_dylib_path_to_relative()
 
     if(artifact): artifact.try_zip_and_upload_artifact(INSTALL_DIR, artifact_name, LIBIMOBILEDEVICE_NODE_ARTIFACT)
