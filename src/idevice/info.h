@@ -27,12 +27,9 @@ struct idevice_info_error {
     idevice_error_t idevice_error;
     lockdownd_error_t lockdownd_error;
     FILE *error_message;
-} const default_idevice_info_error = { 
-    .info_error = INFO_E_UNKOWN_ERROR,
-    .idevice_error = IDEVICE_E_UNKNOWN_ERROR,
-    .lockdownd_error = LOCKDOWN_E_UNKNOWN_ERROR,
-    .error_message = NULL 
 };
+
+extern const struct idevice_info_error default_idevice_info_error;
 
 void idevice_info(struct idevice_info_options options, struct idevice_info_error* error, FILE *stream_out);
 

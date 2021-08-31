@@ -17,12 +17,14 @@ struct idevice_pair_options {
     bool debug;
     char *udid;
     char *command;
-} const default_idevice_pair_options = {.debug = false, .udid = NULL, .command = NULL};
+};
+
+extern const struct idevice_pair_options default_idevice_pair_options;
 
 struct idevice_pair_success {
     bool success;
     FILE *message;
-} const default_idevice_pair_success = { .success = false, .message = NULL };
+};
 
 struct idevice_pair_error {
     pair_error pair_error;
@@ -30,13 +32,9 @@ struct idevice_pair_error {
     lockdownd_error_t lockdownd_error;
     FILE *udid;
     FILE *error_message;
-} const default_idevice_pair_error = { 
-    .pair_error = PAIR_E_UNKOWN_ERROR,
-    .idevice_error = IDEVICE_E_UNKNOWN_ERROR,
-    .lockdownd_error = LOCKDOWN_E_UNKNOWN_ERROR,
-    .udid = NULL,
-    .error_message = NULL 
 };
+
+extern const struct idevice_pair_error default_idevice_pair_error;
 
 int idevice_pair(struct idevice_pair_options options, struct idevice_pair_error *error, FILE *stream_out);
 #endif /* pair_h */

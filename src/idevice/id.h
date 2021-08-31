@@ -24,12 +24,14 @@ struct idevice_id_options {
 struct idevice_udids {
     char **udids;
     int num_udids;
-} const default_idevice_udids = { .udids = NULL, .num_udids = 0 };
+};
 
 struct idevices_found {
     struct idevice_udids usb;
     struct idevice_udids network;
 };
+
+extern const struct idevice_udids default_idevice_udids;
 
 id_error handle_new_device(struct idevice_udids* device_udids, const idevice_info_t *_dev_list, const int i);
 id_error idevice_id(struct idevice_id_options options, struct idevices_found* devices_found);

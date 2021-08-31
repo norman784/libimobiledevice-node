@@ -12,6 +12,20 @@
 
 static char *udid = NULL;
 
+const struct idevice_pair_options default_idevice_pair_options = {
+	false, 	// debug
+	NULL, 	// udid
+	NULL 	// command
+};
+
+const struct idevice_pair_error default_idevice_pair_error = { 
+	PAIR_E_UNKOWN_ERROR,		// pair_error
+	IDEVICE_E_UNKNOWN_ERROR,	// idevice_error
+	LOCKDOWN_E_UNKNOWN_ERROR,	// lockdownd_error
+	NULL,						// udid
+	NULL 						// error_message
+};
+
 static void print_error_message(lockdownd_error_t lerr, struct idevice_pair_error *error)
 {
 	switch (lerr) {

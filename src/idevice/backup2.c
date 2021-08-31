@@ -92,6 +92,29 @@ enum cmd_flags {
     CMD_FLAG_RESTORE_SKIP_APPS          = (1 << 12)
 };
 
+const struct idevice_backup2_options default_idevice_backup2_options = {
+    false,                  // debug
+    NULL,                   // udid
+    NULL,                   // source
+    false,                  // network
+    NULL,                   // command
+    { false },              // backup
+    {                       // restore
+        false,                  // system
+        true,                   // reboot
+        false,                  // copy
+        false,                  // settings
+        true,                   // remove
+        false,                  // skip_apps
+        NULL                    // password
+    },
+    { false, NULL },        // encryption
+    { NULL, NULL },         // changepw
+    { false },              // cloud
+    false,                  // interactive
+    NULL                    // backup_directory
+};
+
 static int backup_domain_changed = 0;
 
 void command_run_successfully(FILE *stream_out) {

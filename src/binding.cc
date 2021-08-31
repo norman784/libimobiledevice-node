@@ -262,7 +262,7 @@ namespace idevice_info_node {
         if (usblist->IsBoolean()) { options.usblist = usblist->BooleanValue(isolate); }
         if (networklist->IsBoolean()) { options.networklist = networklist->BooleanValue(isolate); }
 
-        idevices_found idevices = {.usb = default_idevice_udids, .network = default_idevice_udids};
+        idevices_found idevices = { default_idevice_udids, default_idevice_udids };
 
         id_error error = idevice_id(options, &idevices);
 

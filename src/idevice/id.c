@@ -14,6 +14,8 @@
 #define MODE_SHOW_ID 1
 #define MODE_LIST_DEVICES 2
 
+const struct idevice_udids default_idevice_udids = { NULL, 0 };
+
 id_error handle_new_device(struct idevice_udids* device_udids,const idevice_info_t *_dev_list, const int dev_index) {
     int n_udids = device_udids->num_udids;
     if (device_udids->num_udids == 0) {

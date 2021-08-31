@@ -42,6 +42,13 @@ static const char *domains[] = {
     NULL
 };
 
+const struct idevice_info_error default_idevice_info_error = { 
+    INFO_E_UNKOWN_ERROR,        // info_error
+    IDEVICE_E_UNKNOWN_ERROR,    // idevice_error
+    LOCKDOWN_E_UNKNOWN_ERROR,   // lockdownd_error
+    NULL                        // error_message
+};
+
 static int is_domain_known(char *domain)
 {
     int i = 0;
