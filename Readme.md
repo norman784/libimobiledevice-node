@@ -1,5 +1,8 @@
 ## Node native add-on for libimobiledevice
 
+**IMPORTANT:** this branch must be always rebased up to master.
+
+
 ![Main workflow](https://github.com/norman784/libimobiledevice-node/actions/workflows/main.yml/badge.svg)
 ![node](https://img.shields.io/badge/node-v14-brightgreen)
 ![python](https://img.shields.io/badge/python-%3E%3D3.6-blue)
