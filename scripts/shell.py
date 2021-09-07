@@ -1,4 +1,6 @@
 import subprocess
+from typing import Text
+import os
 
 
 def uname(option: str):
@@ -14,3 +16,13 @@ def make(arg: str = None, cwd: str = None, env = None):
         shell(f'make {arg}', cwd=cwd, env=env)
     else:
         shell('make', cwd=cwd, env=env)
+
+
+def get_relative_path(path: str) -> str:
+    dirname = os.path.dirname(__file__)
+    return os.path.join(dirname, path)
+
+
+def otool(option: str, binary: str):
+    return subprocess.run(["otool", option, binary], capture_output=True, text=True).stdout.strip()
+

@@ -6,12 +6,8 @@ import glob
 import shutil
 import json
 
-from shell import uname, shell, make
+from shell import uname, shell, make, get_relative_path
 from artifact import Artifact
-
-def get_relative_path(path: str) -> str:
-    dirname = os.path.dirname(__file__)
-    return os.path.join(dirname, path)
 
 
 DEPENDENCIES_FILE = get_relative_path('dependencies.json')

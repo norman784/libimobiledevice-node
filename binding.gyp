@@ -79,9 +79,9 @@
             'actions': [
               {
                 'action_name': 'postinstall',
-                'inputs': ['./scripts/postinstall.sh'],
+                'inputs': ['./scripts/postinstall.py'],
                 'outputs': [''],
-                'action': ['./scripts/postinstall.sh']
+                'action': ['./scripts/postinstall.py']
               }
             ]
           }
