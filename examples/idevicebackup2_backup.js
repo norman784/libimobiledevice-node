@@ -8,7 +8,7 @@ imobiledevice.backup2.backup({
     network: false,
     backup_directory: backup_path
 }, (error, data) => {
-    if (error) { console.error('error: ', error); }
+    if (error) { console.error(error); }
     else { console.log('backup ', data) }
 }, (progressMessage) => {
     console.log(progressMessage);
