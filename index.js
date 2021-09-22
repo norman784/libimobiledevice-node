@@ -109,7 +109,7 @@ exports.pair = {
 	},
 	/**
 	 * systembuid –returns the system buid of the usbmuxd host.
-	 * @param {{debug: boolean, udid: string, wifioptions: WIFI_OPTIONS}} [options]
+	 * @param {{debug: boolean, udid: string, wifioption: WIFI_OPTIONS}} [options]
 	 * @param {(error: (PairInvalidCommandError | PairInvalidWifiOptionError | IdeviceNoDeviceFoundError | LockdownError | PairUnkownError), state: WIFI_STATE)} callback 
 	 */
 	wifi: (options, callback) => {

@@ -72,7 +72,8 @@ int idevice_pair(struct idevice_pair_options options, struct idevice_pair_error 
 	typedef enum {
        WIFI_SHOW,
        WIFI_ENABLE,
-       WIFI_DISABLE
+       WIFI_DISABLE,
+	   WIFI_REMOVE
 	} t_wifi;
 	t_wifi wifiop = WIFI_SHOW;
 
@@ -98,6 +99,8 @@ int idevice_pair(struct idevice_pair_options options, struct idevice_pair_error 
 				wifiop = WIFI_ENABLE;
 			} else if (!strcmp(options.wifioption, "off")) {
 				wifiop = WIFI_DISABLE;
+			} else if (!strcmp(options.wifioption, "remove")) {
+				wifiop = WIFI_REMOVE;
 			} else {
 				fprintf(error->error_message, "ERROR: Invalid WiFi option '%s' specified\n", options.wifioption);
 				error->pair_error = PAIR_E_INVALID_WIFI_OPTION;
@@ -243,17 +246,25 @@ int idevice_pair(struct idevice_pair_options options, struct idevice_pair_error 
 			error->lockdownd_error = lockdownd_client_new_with_handshake(device, &client, TOOL_NAME);
 			if (wifiop == WIFI_SHOW) {
 				plist_t node;
-				if((error->lockdownd_error = lockdownd_get_value(client, "com.apple.mobile.wireless_lockdown", "EnableWifiConnections", &node)) == LOCKDOWN_E_SUCCESS) {
+				error->lockdownd_error = lockdownd_get_value(client, "com.apple.mobile.wireless_lockdown", "EnableWifiConnections", &node);
+				if(error->lockdownd_error == LOCKDOWN_E_SUCCESS) {
 					if (node) {
 						fprintf(stream_out, "%s", plist_bool_val_is_true(node) ? "ENABLED" : "DISABLED");
 						plist_free(node);
 						node = NULL;
 					}
-				} else {
+				} else if (error->lockdownd_error == LOCKDOWN_E_MISSING_VALUE) {
+					error->lockdownd_error = LOCKDOWN_E_SUCCESS;
+					fprintf(stream_out, "%s", "DISABLED");
+				} else {	
 					result = EXIT_FAILURE;
 					print_error_message(error->lockdownd_error, error);
 				}
-			} else{ 
+			} else if (wifiop == WIFI_REMOVE) {
+				if((error->lockdownd_error = lockdownd_remove_value(client, "com.apple.mobile.wireless_lockdown", "EnableWifiConnections")) == LOCKDOWN_E_SUCCESS) {
+					fprintf(stream_out, "%s", "DISABLED");
+				}
+			 } else {
 				error->lockdownd_error = lockdownd_set_value(client, "com.apple.mobile.wireless_lockdown", "EnableWifiConnections", plist_new_bool(wifiop == WIFI_ENABLE));
 				if (error->lockdownd_error == LOCKDOWN_E_SUCCESS) {
 					fprintf(stream_out, "%s", wifiop == WIFI_ENABLE ? "ENABLED" : "DISABLED");

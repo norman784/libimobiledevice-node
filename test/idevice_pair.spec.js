@@ -14,7 +14,7 @@ describe('idevice_pair tests', () => {
         on: stubChildOn(stubErrors(0, 0, 0, ''),''),
         disconnect: spies.child.disconnect.returns(() => {})
     }};
-    let getDefaultOptions = (command) => { return {debug: false, command: command, udid: null, wifioption: WIFI_OPTIONS.show}; };
+    let getDefaultOptions = (command) => { return {debug: false, command: command, udid: null, wifioption: null}; };
     let stubs = {};
     let spies = {};
 
