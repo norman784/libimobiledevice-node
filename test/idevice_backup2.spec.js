@@ -3,7 +3,7 @@ const { backup2, Backup2Error, EncryptionDeviceLockedError, EncryptionInvalidPas
 const { expect } = require("chai");
 const cp = require('child_process');
 const { match } = require("sinon");
-const { getDefaultOptions, BACKUP2_COMMANDS, ENCRYPTION_ERROR_STRINGS } = require("../lib/idevice_backup2");
+const { getDefaultOptions, BACKUP2_COMMANDS, ENCRYPTION_ERROR_STRINGS, BackupDiskPurgeError } = require("../lib/idevice_backup2");
 
 describe('idevice_backup2 tests', () => {
     const path = 'Users/homedir';
@@ -114,6 +114,16 @@ describe('idevice_backup2 tests', () => {
         }, (progress) => {
             expect(progress).to.eql(10.12);
         });
+    });
+
+    it('id.backup2.backup should fail with BackupDiskPurge', () => {
+        let options = { backup_directory: path };
+        spies.child.fork.returns(stubFork(spies, 'ERROR: DLMessagePurgeDiskSpace, space to purge: 14228228133 bytes'), null, null);
+        backup2.backup(options, (error, result) => {
+            expect(result).to.be.null;
+            expect(error).to.be.instanceOf(BackupDiskPurgeError);
+            expect(error.spaceToPurge).to.equal(14228228133);
+        }, () => {});
     });
 
     it('id.backup2.backup should fail with Backup2Error', () => {

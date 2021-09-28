@@ -115,6 +115,17 @@ const struct idevice_backup2_options default_idevice_backup2_options = {
     NULL                    // backup_directory
 };
 
+static uint64_t get_among_space_to_purge(plist_t message) {
+    uint64_t space = 0;
+    plist_t plist_tmp = NULL;
+    plist_tmp = plist_array_get_item(message, 1);
+    if (plist_tmp && (plist_get_node_type(plist_tmp) == PLIST_UINT)) {
+        plist_get_uint_val(plist_tmp, &space);
+    }
+    plist_free(plist_tmp);
+    return space;
+}
+
 static int backup_domain_changed = 0;
 
 void command_run_successfully(FILE *stream_out) {
@@ -940,7 +951,7 @@ static void mb2_handle_send_files(FILE *stream_err, FILE *stream_out, mobileback
     }
 }
 
-static int mb2_receive_filename(mobilebackup2_client_t mobilebackup2, char** filename)
+static int mb2_receive_filename(FILE *stream_error, mobilebackup2_client_t mobilebackup2, char** filename)
 {
     uint32_t nlen = 0;
     uint32_t rlen = 0;
@@ -959,7 +970,7 @@ static int mb2_receive_filename(mobilebackup2_client_t mobilebackup2, char** fil
             continue;
         } else if (nlen > 4096) {
             // filename length is too large
-            printf("ERROR: %s: too large filename length (%d)!\n", __func__, nlen);
+            fprintf(stream_error, "ERROR: %s: too large filename length (%d)!\n", __func__, nlen);
             return 0;
         }
         
@@ -973,7 +984,7 @@ static int mb2_receive_filename(mobilebackup2_client_t mobilebackup2, char** fil
         rlen = 0;
         mobilebackup2_receive_raw(mobilebackup2, *filename, nlen, &rlen);
         if (rlen != nlen) {
-            printf("ERROR: %s: could not read filename\n", __func__);
+            fprintf(stream_error, "ERROR: %s: could not read filename\n", __func__);
             return 0;
         }
         
@@ -1020,12 +1031,12 @@ static int mb2_handle_receive_files(FILE *stream_error, FILE *stream_out, node_p
         if (quit_flag)
             break;
         
-        nlen = mb2_receive_filename(mobilebackup2, &dname);
+        nlen = mb2_receive_filename(stream_error, mobilebackup2, &dname);
         if (nlen == 0) {
             break;
         }
         
-        nlen = mb2_receive_filename(mobilebackup2, &fname);
+        nlen = mb2_receive_filename(stream_error, mobilebackup2, &fname);
         if (!nlen) {
             break;
         }
@@ -2135,6 +2146,7 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
                 free(dlmsg);
                 dlmsg = NULL;
                 mobilebackup2_receive_message(mobilebackup2, &message, &dlmsg);
+
                 if (!message || !dlmsg) {
                     PRINT_VERBOSE(1, stream_out, "Device is not ready yet. Going to try again in 2 seconds...\n");
                     PRINT_VERBOSE_DEBUG(1, "Device is not ready yet. Going to try again in 2 seconds...\n");
@@ -2152,6 +2164,7 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
                     file_count += mb2_handle_receive_files(stream_err, stream_out, progress_callback, mobilebackup2, message, backup_directory);
                 } else if (!strcmp(dlmsg, "DLMessageGetFreeDiskSpace")) {
                     /* device wants to know how much disk space is available on the computer */
+                    PRINT_VERBOSE_DEBUG(1, "Device wants to know how much disk space is available on the computer\n");
                     uint64_t freespace = 0;
                     int res = -1;
 #ifdef WIN32
@@ -2163,12 +2176,17 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
                     memset(&fs, '\0', sizeof(fs));
                     res = statvfs(backup_directory, &fs);
                     if (res == 0) {
-                        freespace = (uint64_t)fs.f_bavail * (uint64_t)fs.f_bsize;
+                        freespace = (uint64_t)fs.f_bavail * (uint64_t)fs.f_frsize;
                     }
 #endif
+                    PRINT_VERBOSE_DEBUG(1, "Available free space %llu\n", freespace);
                     plist_t freespace_item = plist_new_uint(freespace);
                     mobilebackup2_send_status_response(mobilebackup2, res, NULL, freespace_item);
                     plist_free(freespace_item);
+                } else if (!strcmp(dlmsg, "DLMessagePurgeDiskSpace")) {
+                    fprintf(stream_err, "ERROR: DLMessagePurgeDiskSpace, space to purge: %llu bytes\n", get_among_space_to_purge(message));
+                    cmd = CMD_LEAVE;
+                    break;
                 } else if (!strcmp(dlmsg, "DLContentsOfDirectory")) {
                     /* list directory contents */
                     mb2_handle_list_directory(mobilebackup2, message, backup_directory);
@@ -2416,15 +2434,15 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
                     PRINT_VERBOSE(1, stream_out, "Received %d files from device.\n", file_count);
                     PRINT_VERBOSE_DEBUG(1, "Received %d files from device.\n", file_count);
                     if (operation_ok && mb2_status_check_snapshot_state(backup_directory, udid, "finished")) {
-                        PRINT_VERBOSE(1, stream_out, "Backup Successful.\n");
+                        fprintf(stream_out, "Backup Successful.\n");
                         PRINT_VERBOSE_DEBUG(1, "Backup Successful.\n");
                         command_run_successfully(stream_out);
                     } else {
                         if (quit_flag) {
-                            PRINT_VERBOSE(1, stream_out, "Backup Aborted.\n");
+                            fprintf(stream_out, "Backup Aborted.\n");
                             PRINT_VERBOSE_DEBUG(1, "Backup Aborted.\n");
                         } else {
-                            PRINT_VERBOSE(1, stream_out, "Backup Failed (Error Code %d).\n", -result_code);
+                            fprintf(stream_err, "Backup Failed (Error Code %d).\n", -result_code);
                             PRINT_VERBOSE_DEBUG(1, "Backup Failed (Error Code %d).\n", -result_code);
                         }
                     }
@@ -2492,7 +2510,7 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
                         PRINT_VERBOSE(1, stream_out, "Operation Aborted.\n");
                         PRINT_VERBOSE_DEBUG(1, "Operation Aborted.\n");
                     } else if (cmd == CMD_LEAVE) {
-                        PRINT_VERBOSE(1, stream_out, "Operation Failed.\n");
+                        fprintf(stream_err, "Operation Failed.\n");
                         PRINT_VERBOSE_DEBUG(1, "Operation Failed.\n");
                     } else {
                         PRINT_VERBOSE(1, stream_out, "Operation Successful.\n");

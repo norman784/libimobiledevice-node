@@ -3,7 +3,7 @@ const { idevice_id, CannotRetrieveDeviceListError, CannotMallocMemoryError, Cann
 const { idevice_info, InfoInvalidDomainError, InfoUnkownError } = require('./lib/idevice_info');
 const { UnkownErrror, IdeviceNoDeviceFoundError, LockdownPasswordProtectedError, LockdownInvalidHostIdError, LockdownPairingDialongResponsoPendingError, LockdownUserDeniedPairingError, LockdownError } = require('./lib/errors');
 const { PairInvalidCommandError, PairInvalidWifiOptionError, PairUnkownError, idevice_pair, getPairParameters, WIFI_OPTIONS, WIFI_STATE } = require('./lib/idevice_pair');
-const { idevice_backup2, getBackup2Parameters, BACKUP2_COMMANDS, Backup2Error, EncryptionDeviceLockedError, EncryptionInvalidPasswordError, EncryptionAlreadyEnabledError, EncryptionAlreadyDisabledError } = require('./lib/idevice_backup2');
+const { idevice_backup2, getBackup2Parameters, BACKUP2_COMMANDS, Backup2Error, EncryptionDeviceLockedError, EncryptionInvalidPasswordError, EncryptionAlreadyEnabledError, EncryptionAlreadyDisabledError, BackupDiskPurgeError } = require('./lib/idevice_backup2');
 
 // Export errors
 exports.UnkownErrror = UnkownErrror;
@@ -27,6 +27,7 @@ exports.PairInvalidWifiOptionError = PairInvalidWifiOptionError;
 exports.PairUnkownError = PairUnkownError;
 // Backup errors
 exports.Backup2Error = Backup2Error;
+exports.BackupDiskPurgeError = BackupDiskPurgeError;
 exports.EncryptionDeviceLockedError = EncryptionDeviceLockedError;
 exports.EncryptionInvalidPasswordError = EncryptionInvalidPasswordError;
 exports.EncryptionAlreadyEnabledError = EncryptionAlreadyEnabledError;
@@ -130,7 +131,7 @@ exports.backup2 = {
 	 * backup: { full: boolean },
 	 * backup_directory: string
 	 * }} options full flag will force full backup from device.
-	 * @param {(error: Backup2Error, result: { success: boolean, message: string }) => void} callback 
+	 * @param {(error: Backup2Error | BackupDiskPurgeError, result: { success: boolean, message: string }) => void} callback 
 	 * @param {(progress: number) => void} progress 
 	 */
 	backup: (options, callback, progress) => {
