@@ -106,7 +106,7 @@ def install_openssl_ifneeded():
 
     openssl_tar_file = re.search('openssl-.*', OPENSSL_URL)[0]
     openssl_dir = f"{TMP_PATH}/{openssl_tar_file.replace('.tar.gz', '').strip()}"
-    shell(f'curl -OL {OPENSSL_URL}', cwd=TMP_PATH)
+    shell(f'curl -kOL {OPENSSL_URL}', cwd=TMP_PATH)
     shell(f'tar xvzf {openssl_tar_file}', cwd=TMP_PATH)
 
     shell(get_openssl_configuration(), cwd=openssl_dir)
