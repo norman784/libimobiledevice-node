@@ -186,20 +186,25 @@ def change_dylib_path_to_relative():
 
 # RUN SCRIPT
 if __name__ == "__main__":
-    artifact = Artifact(bucket_name='ios-native-qustodio-dev')
+    artifact = None
+    try:
+        artifact = Artifact(bucket_name='ios-native-qustodio-dev')
 
-    dependencies_hash = artifact.get_hash_from(file_content=DEPENDENCIES_FILE)
-    artifact_name = f'{dependencies_hash}.zip'
+        dependencies_hash = artifact.get_hash_from(file_content=DEPENDENCIES_FILE)
+        artifact_name = f'{dependencies_hash}.zip'
 
-    print('depenencies hash: ', dependencies_hash)
-    print('ROOT_PATH: ', ROOT_PATH)
+        print('depenencies hash: ', dependencies_hash)
+        print('ROOT_PATH: ', ROOT_PATH)
 
-    if not os.path.isdir(INSTALL_DIR):
-        if artifact.try_download_and_unzip_artifact(artifact_name, LIBIMOBILEDEVICE_NODE_ARTIFACT, unzip_path=get_relative_path('../')):
-            exit(0)
+        if not os.path.isdir(INSTALL_DIR):
+            if artifact.try_download_and_unzip_artifact(artifact_name, LIBIMOBILEDEVICE_NODE_ARTIFACT, unzip_path=get_relative_path('../')):
+                exit(0)
         
-        print("🛠 Don't worry building it for you...")
-        os.mkdir(TMP_PATH)
+            print("🛠 Don't worry building it for you...")
+            os.mkdir(TMP_PATH)
+    except Exception as error:
+        print(f"💥 Artifact error: {error}")
+        print("🛠 Don't worry building libimobiledevice for you...")
 
     # Install Openssl
     install_openssl_ifneeded()
@@ -220,4 +225,4 @@ if __name__ == "__main__":
     if uname('-s') == "Darwin":
         change_dylib_path_to_relative()
 
-    artifact.try_zip_and_upload_artifact(INSTALL_DIR, artifact_name, LIBIMOBILEDEVICE_NODE_ARTIFACT)
+    if(artifact): artifact.try_zip_and_upload_artifact(INSTALL_DIR, artifact_name, LIBIMOBILEDEVICE_NODE_ARTIFACT)
