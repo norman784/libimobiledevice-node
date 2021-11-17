@@ -117,7 +117,7 @@ def install_openssl_ifneeded():
     print(get_install_successfully('openssl'))
 
 
-def install_lib_ifneeded(name: str, url: str, commit: str, is_pkg_config: bool = False, is_ld_library: bool = False, is_cdpath: bool = False):
+def install_lib_ifneeded(name: str, url: str, commit: str, is_pkg_config: bool = False, is_ld_library: bool = False, is_cdpath: bool = False, debug: bool = False):
     
     if glob.glob(f'{INSTALL_DIR}/lib/{name}-*'):
         return
@@ -143,7 +143,7 @@ def install_lib_ifneeded(name: str, url: str, commit: str, is_pkg_config: bool =
         # so running a second time the issue its fixed
         shell('./autogen.sh', cwd=lib_dir, check=False, env=environment)
         shell('./autogen.sh', cwd=lib_dir, env=environment)
-        shell(f'./configure --prefix={INSTALL_DIR} --without-cython', cwd=lib_dir, env=environment)
+        shell(f'./configure --prefix={INSTALL_DIR} --without-cython {("", "--enable-debug")[debug]}', cwd=lib_dir, env=environment)
     elif operating_system.find('MINGW') > -1:
         shell(f'./autogen.sh CC=gcc CXX=g++ --prefix={INSTALL_DIR} --without-cython', cwd=lib_dir, env=environment)
 
@@ -201,10 +201,12 @@ if __name__ == "__main__":
                 exit(0)
         
             print("🛠 Don't worry building it for you...")
-            os.mkdir(TMP_PATH)
     except Exception as error:
         print(f"💥 Artifact error: {error}")
         print("🛠 Don't worry building libimobiledevice for you...")
+
+    if not os.path.isdir(TMP_PATH):
+        os.mkdir(TMP_PATH)
 
     # Install Openssl
     install_openssl_ifneeded()
