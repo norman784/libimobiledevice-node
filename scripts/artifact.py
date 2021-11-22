@@ -88,7 +88,7 @@ class Artifact:
     def try_zip_and_upload_artifact(self, zip_sources_path: str, artifact_name: str, remote_path: str) -> bool:
         try:
             if self._is_element_on_s3(remote_path, artifact_name):
-                print(f'🙌 Artifact {artifact_name} is alreadyt on s3')
+                print(f'🙌 Artifact {artifact_name} is already at on s3')
                 return False
             self._zip_artifact(zip_sources_path, artifact_name)
             print(f'💾 Uploading artifact: {artifact_name}...')

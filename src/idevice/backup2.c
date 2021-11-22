@@ -40,6 +40,7 @@
 
 #define LOCK_ATTEMPTS 50
 #define LOCK_WAIT 200000
+#define MAX_RETRIES 8
 
 #ifdef WIN32
     #include <windows.h>
@@ -621,12 +622,17 @@ static void do_post_notification(idevice_t device, const char *notification)
     np_client_t np;
     
     lockdownd_client_t lockdown = NULL;
+    lockdownd_error_t lockdown_error;
     
-    if (lockdownd_client_new_with_handshake(device, &lockdown, "idevicebackup2") != LOCKDOWN_E_SUCCESS) {
+    if ((lockdown_error = lockdownd_client_new_with_handshake(device, &lockdown, "idevicebackup2")) != LOCKDOWN_E_SUCCESS) {
+        PRINT_VERBOSE_DEBUG(1, "Could not lockdownd_client_new_with_handshake with lockdown error %d", lockdown_error);
         return;
     }
-    
-    lockdownd_start_service(lockdown, NP_SERVICE_NAME, &service);
+
+    if ((lockdown_error = lockdownd_start_service(lockdown, NP_SERVICE_NAME, &service)) != LOCKDOWN_E_SUCCESS) {
+        PRINT_VERBOSE_DEBUG(1, "Could not start %s service with lockdown error %d", NP_SERVICE_NAME, lockdown_error);
+    }
+
     if (service && service->port) {
         np_client_new(device, service, &np);
         if (np) {
@@ -636,11 +642,12 @@ static void do_post_notification(idevice_t device, const char *notification)
     } else {
         printf("Could not start %s\n", NP_SERVICE_NAME);
     }
-    
+
     if (service) {
         lockdownd_service_descriptor_free(service);
         service = NULL;
     }
+
     lockdownd_client_free(lockdown);
 }
 
@@ -1552,7 +1559,7 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
             fprintf(stream_err, "Old and new passwords have to be passed as arguments for the changepw command\n");
             return;
         }
-    } else if(!strcmp(command, "cloud")) {
+    } else if (!strcmp(command, "cloud")) {
         cmd = CMD_CLOUD;
         if (options.cloud.enable) {
             cmd_flags |= CMD_FLAG_CLOUD_ENABLE;
@@ -1574,6 +1581,7 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
         backup_directory = (char*)".this_folder_is_not_present_on_purpose";
     } else {
         if (backup_directory == NULL) {
+            PRINT_VERBOSE_DEBUG(1, "No backup directory specified, using default.\n");
             fprintf(stream_err, "No target backup directory specified.\n");
             return;
         }
@@ -1671,13 +1679,18 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
             }
         }
     }
+
+
     
     lockdownd_client_t lockdown = NULL;
     if (LOCKDOWN_E_SUCCESS != (ldret = lockdownd_client_new_with_handshake(device, &lockdown, "idevicebackup2"))) {
+        PRINT_VERBOSE_DEBUG(1, "ERROR: Could not connect to lockdownd., error code %d\n", ldret);
         fprintf(stream_err, "ERROR: Could not connect to lockdownd, error code %d\n", ldret);
         idevice_free(device);
         return;
     }
+
+
 
     uint8_t willEncrypt = 0;
     node_tmp = NULL;
@@ -1689,6 +1702,8 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
         plist_free(node_tmp);
 		node_tmp = NULL;
     }
+
+
 
 	/* get ProductVersion */
 	char *product_version = NULL;
@@ -1708,13 +1723,22 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
 			device_version = DEVICE_VERSION(vers[0], vers[1], vers[2]);
 		}
 	}
+
+
     
     /* start notification_proxy */
     np_client_t np = NULL;
     ldret = lockdownd_start_service(lockdown, NP_SERVICE_NAME, &service);
+
     if ((ldret == LOCKDOWN_E_SUCCESS) && service && service->port) {
-        np_client_new(device, service, &np);
+        np_error_t np_error = np_client_new(device, service, &np);
+        if(np_error != NP_E_SUCCESS) {
+            PRINT_VERBOSE_DEBUG(1, "ERROR: Could not create client for service %s, error code %d\n", NP_SERVICE_NAME, np_error);
+            PRINT_VERBOSE(1, stream_out, "ERROR: Could not create client for service %s, error code %d\n", NP_SERVICE_NAME, np_error);
+        }
+
         np_set_notify_callback(np, notify_cb, NULL);
+
         const char *noties[5] = {
             NP_SYNC_CANCEL_REQUEST,
             NP_SYNC_SUSPEND_REQUEST,
@@ -1724,8 +1748,11 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
         };
         np_observe_notifications(np, noties);
     } else {
+        PRINT_VERBOSE_DEBUG(1, "ERROR: Could not start service %s.\n", NP_SERVICE_NAME);
         fprintf(stream_err, "ERROR: Could not start service %s.\n", NP_SERVICE_NAME);
     }
+
+
     
     afc_client_t afc = NULL;
     if (cmd == CMD_BACKUP || cmd == CMD_RESTORE) {
@@ -1733,25 +1760,44 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
         service->port = 0;
         service->ssl_enabled = 0;
         ldret = lockdownd_start_service(lockdown, AFC_SERVICE_NAME, &service);
+
         if ((ldret == LOCKDOWN_E_SUCCESS) && service->port) {
             afc_client_new(device, service, &afc);
         }
+
+
+        if(ldret != LOCKDOWN_E_SUCCESS) {
+            PRINT_VERBOSE_DEBUG(1, "ERROR: Could not start service %s.\n due to %d", AFC_SERVICE_NAME, ldret);
+            //fprintf(stream_err, "ERROR: Could not start service %s.\n", AFC_SERVICE_NAME);
+        }
+
     }
+
+
     
     if (service) {
         lockdownd_service_descriptor_free(service);
         service = NULL;
     }
     
+
     /* start mobilebackup service and retrieve port */
     mobilebackup2_client_t mobilebackup2 = NULL;
     ldret = lockdownd_start_service_with_escrow_bag(lockdown, MOBILEBACKUP2_SERVICE_NAME, &service);
     lockdownd_client_free(lockdown);
 	lockdown = NULL;
+
     if ((ldret == LOCKDOWN_E_SUCCESS) && service && service->port) {
         PRINT_VERBOSE(1, stream_out, "Started \"%s\" service on port %d.\n", MOBILEBACKUP2_SERVICE_NAME, service->port);
         PRINT_VERBOSE_DEBUG(1, "Started \"%s\" service on port %d.\n", MOBILEBACKUP2_SERVICE_NAME, service->port);
-        mobilebackup2_client_new(device, service, &mobilebackup2);
+        err = mobilebackup2_client_new(device, service, &mobilebackup2);
+
+        if (err != MOBILEBACKUP2_E_SUCCESS) {
+            PRINT_VERBOSE(1, stream_out, "Could not create a new client, error code %d\n", err);
+            PRINT_VERBOSE_DEBUG(1, "Could not create a new client, error code %d\n", err);
+            cmd = CMD_LEAVE;
+            goto checkpoint;
+        }
         
         if (service) {
             lockdownd_service_descriptor_free(service);
@@ -1764,6 +1810,7 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
         err = mobilebackup2_version_exchange(mobilebackup2, local_versions, 2, &remote_version);
         if (err != MOBILEBACKUP2_E_SUCCESS) {
             printf("Could not perform backup protocol version exchange, error code %d\n", err);
+            fprintf(stream_err, "Could not perform backup protocol version exchange, error code %d\n", err);
             cmd = CMD_LEAVE;
             goto checkpoint;
         }
@@ -1797,12 +1844,13 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
                 is_full_backup = 1;
             }
         }
-        
+
         uint64_t lockfile = 0;
         if (cmd == CMD_BACKUP || cmd == CMD_RESTORE) {
             do_post_notification(device, NP_SYNC_WILL_START);
             afc_file_open(afc, "/com.apple.itunes.lock_sync", AFC_FOPEN_RW, &lockfile);
         }
+
         if (lockfile) {
             afc_error_t aerr;
             do_post_notification(device, NP_SYNC_LOCK_REQUEST);
@@ -1815,6 +1863,7 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
                     usleep(LOCK_WAIT);
                     continue;
                 } else {
+                    PRINT_VERBOSE_DEBUG(1,"ERROR: could not lock file! error code: %d\n", aerr);
                     fprintf(stderr, "ERROR: could not lock file! error code: %d\n", aerr);
                     afc_file_close(afc, lockfile);
                     lockfile = 0;
@@ -1822,12 +1871,14 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
                 }
             }
             if (i == LOCK_ATTEMPTS) {
+                PRINT_VERBOSE_DEBUG(1, "ERROR: timeout while locking for sync\n");
                 fprintf(stderr, "ERROR: timeout while locking for sync\n");
                 afc_file_close(afc, lockfile);
                 lockfile = 0;
                 cmd = CMD_LEAVE;
             }
         }
+
         
     checkpoint:
         
@@ -2140,6 +2191,7 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
             int errcode = 0;
             const char *errdesc = NULL;
             int progress_finished = 0;
+            int retry_count = 0;
             
             /* process series of DLMessage* operations */
             do {
@@ -2151,6 +2203,7 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
                     PRINT_VERBOSE(1, stream_out, "Device is not ready yet. Going to try again in 2 seconds...\n");
                     PRINT_VERBOSE_DEBUG(1, "Device is not ready yet. Going to try again in 2 seconds...\n");
                     sleep(2);
+                    if (retry_count++ > MAX_RETRIES - 1) quit_flag++;
                     goto files_out;
                 }
                 
@@ -2528,7 +2581,7 @@ void idevice_backup2(struct idevice_backup2_options options, FILE *stream_err, F
                 do_post_notification(device, NP_SYNC_DID_FINISH);
         }
     } else {
-        fprintf(stream_err, "ERROR: Could not start service %s.\n", MOBILEBACKUP2_SERVICE_NAME);
+        fprintf(stream_err, "ERROR: Could not start service %s due to %d.\n", MOBILEBACKUP2_SERVICE_NAME, ldret);
         lockdownd_client_free(lockdown);
         lockdown = NULL;
     }

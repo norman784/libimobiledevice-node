@@ -5,11 +5,14 @@ const backup_path = homedir + '/backuptemp/';
 
 imobiledevice.backup2.backup({
     debug: true,
-    network: false,
+    network: true,
+    udid: '199d80698a9a5583b0577f157838861a9d878993',
     backup_directory: backup_path
 }, (error, data) => {
-    if (error) { console.error(error); }
-    else { console.log('backup ', data) }
+   console.log('------------------- error -------------------');
+   console.log(error);
+   console.log('------------------- data -------------------');
+   console.log(data);
 }, (progressMessage) => {
     console.log(progressMessage);
 });
