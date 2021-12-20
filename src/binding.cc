@@ -16,8 +16,14 @@ namespace idevice_info_node {
     char *ToCString(Isolate* isolate, const Local<Value>& value) {
         if (!value->IsString()) return NULL;
         String::Utf8Value string(isolate, value);
-        char *str = (char *) malloc(string.length() - 1);
-        strcpy(str, *string);
+        char *str = (char *) malloc(sizeof(char) * (string.length() + 1));
+
+        if(!str) {
+            fprintf(stderr, "Fatal Error: failed to allocate %lu bytes.\n", sizeof(char) * (string.length() + 1));
+            exit(1);
+        }
+
+        strncpy(str, *string, string.length() + 1);
         return str;
     }
     
