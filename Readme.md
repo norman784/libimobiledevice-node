@@ -19,14 +19,34 @@ $ yarn add libimobiledevice
 
 ### Windows
 
-#### Requeriments
+#### Requeriments for developing
 
-For using libimobiledevice-node on windows the following requeriments are needed:
+##### Windows MINGW 
 
-- Install **Visual Studio 2017 community**.
-- Install **Windows SDK 8.1**.
-- Be sure **Powershell** command can be called from the command line.
-- Add **msbuild.exe** on windows **PATH**.
+- Install msys2 win64: [https://www.msys2.org/](https://www.msys2.org/)
+- Open MinGW terminal.
+- Install git: `pacman -S git`.
+- Generate a new ssh key with: `ssh-keygen -t rsa -b 4096`.
+- Add the public key on your github `cat ~/.ssh/id_rsa.pub`.
+- Clone the libimobiledevice repo: `git clone git@github.com:qustodio/libimobiledevice-fork.git`
+- Run: `scripts/bootstrap-win.sh` for installing develop tools.
+- Run: `scripts/install.py` for building libimobiledevice and all dependencies.
+
+Once  libimobiledevice has been builded on MinGW, now is time to build the node package natively.
+
+##### Native Windows
+
+- Install python on windows: https://www.python.org/downloads/.
+- Install nvm for windows: https://github.com/coreybutler/nvm-windows
+- Open Windows PowerShell.
+- Install node: nvm install 14.18.0
+- Go to the libimboiledevice-node path, for example `cd 'C:\msys64\home\<user-name>\<libimobiledevice-node>'`.
+- Run: `npm i`.
+- Provably will fail on node-gyp step.
+- In order to ensure you're running the node-gyp v8.0.0, run: `.\node_modules\.bin\node-gyp rebuild`.
+
+
+# libimobiledevice
 
 ```bash
 $ yarn add libimobiledevice
