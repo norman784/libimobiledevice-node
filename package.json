@@ -12,7 +12,7 @@
     "shelljs": "^0.8.3"
   },
   "scripts": {
-    "install": "./scripts/install.py",
+    "install": "python ./scripts/install.py",
     "postinstall": "node-gyp rebuild",
     "preinstall-win": "./scripts/preinstall.cmd",
     "install-win": "./scripts/install.cmd && node-gyp rebuild && ./scripts/postinstall.cmd",

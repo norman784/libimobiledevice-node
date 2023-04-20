@@ -53,16 +53,30 @@
                "src/common/libgen.c"
              ],
               "include_dirs": [
-                "dependencies/x86-windows/include",
-                "dependencies/libplist/include",
-                "dependencies/libusbmuxd/include",
+                "dependencies/plist/include",
+                "dependencies/include",
                 "dependencies/libimobiledevice/include"
               ],
-              "libraries": [
-                "<(module_root_dir)/dependencies/x86-windows/lib/*.lib",
-                "<(module_root_dir)/dependencies/libplist/lib/plist.lib",
-                "<(module_root_dir)/dependencies/libusbmuxd/lib/usbmuxd.lib",
-                "<(module_root_dir)/dependencies/libimobiledevice/lib/imobiledevice.lib"
+              "link_settings": {
+                "libraries": [
+                  "-l<(module_root_dir)/dependencies/lib/libcrypto-1_1-x64.dll.a",
+                  "<(module_root_dir)/dependencies/lib/libssl-1_1-x64.dll.a",
+                  "<(module_root_dir)/dependencies/lib/libplist-2.0.dll.a",
+                  "<(module_root_dir)/dependencies/lib/libusbmuxd-2.0.dll.a",
+                  "<(module_root_dir)/dependencies/lib/libimobiledevice-1.0.dll.a",
+                ]
+              },
+              "copies": [
+                {
+                "destination": "<(module_root_dir)/build/Release/",
+                    "files": [
+                        "<(module_root_dir)/dependencies/lib/libcrypto-1_1-x64.dll",
+                        "<(module_root_dir)/dependencies/lib/libssl-1_1-x64.dll",
+                        "<(module_root_dir)/dependencies/lib/libplist-2.0.dll",
+                        "<(module_root_dir)/dependencies/lib/libusbmuxd-2.0.dll",
+                        "<(module_root_dir)/dependencies/lib/libimobiledevice-1.0.dll",
+                    ]
+                },
               ]
             }
           ]

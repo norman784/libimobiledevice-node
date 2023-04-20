@@ -10,12 +10,25 @@
                 "${workspaceFolder}/src/idevice",
                 "~/.nodenv/versions/14.16.1/include/node"
             ],
-            "defines": [],
+            "defines": ["HAVE_OPENSSL"],
             "macFrameworkPath": [],
             "compilerPath": "/opt/homebrew/bin/gcc-10",
             "cStandard": "gnu17",
             "cppStandard": "gnu++14",
             "intelliSenseMode": "macos-gcc-arm64"
+        },
+        {
+            "name": "Windows",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/dependencies/include",
+                "${workspaceFolder}/src/**",
+                "${workspaceFolder}/src/common",
+                "${workspaceFolder}/src/idevice"
+            ],
+            "defines": ["WIN32"],
+            "cStandard": "gnu17",
+            "cppStandard": "gnu++14"
         }
     ],
     "version": 4

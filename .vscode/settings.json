@@ -59,6 +59,7 @@
         "cinttypes": "c",
         "cstdbool": "c",
         "typeinfo": "c",
-        "common_binding.h": "c"
+        "common_binding.h": "c",
+        "dirent.h": "c"
     }
 }

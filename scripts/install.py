@@ -6,6 +6,7 @@ import re
 import glob
 import shutil
 import json
+import platform
 
 from shell import uname, shell, make, get_relative_path
 from artifact import Artifact
@@ -189,7 +190,12 @@ def change_dylib_path_to_relative():
 # RUN SCRIPT
 if __name__ == "__main__":
     artifact = None
+    if platform.platform().find('Windows') != -1:
+        print("Is windows!")
+        exit(0)
+
     try:
+        raise Exception("Force install please!")
         artifact = Artifact(bucket_name='ios-native-qustodio-dev')
 
         dependencies_hash = artifact.get_hash_from(file_content=DEPENDENCIES_FILE)
@@ -224,9 +230,9 @@ if __name__ == "__main__":
     if os.path.isdir(f'{INSTALL_DIR}/bin'):
         if OPERATING_SYSTEM.find('MINGW') > -1:
             shell("cp dependencies/bin/*.dll dependencies/lib")
-        shutil.rmtree(f'{INSTALL_DIR}/bin')
+        # shutil.rmtree(f'{INSTALL_DIR}/bin')
 
     if OPERATING_SYSTEM == "Darwin":
         change_dylib_path_to_relative()
 
-    if(artifact): artifact.try_zip_and_upload_artifact(INSTALL_DIR, artifact_name, LIBIMOBILEDEVICE_NODE_ARTIFACT)
+    # if(artifact): artifact.try_zip_and_upload_artifact(INSTALL_DIR, artifact_name, LIBIMOBILEDEVICE_NODE_ARTIFACT)
