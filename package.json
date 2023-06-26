@@ -6,6 +6,9 @@
   "repository": "https://github.com/norman784/libimobiledevice-node",
   "author": "Norman Paniagua (https://github.com/norman784)",
   "license": "MIT",
+  "os": [
+    "darwin"
+  ],
   "dependencies": {
     "node-gyp": "^8.0.0",
     "plist": "^3.0.2",
